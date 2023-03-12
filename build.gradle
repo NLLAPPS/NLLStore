@@ -1,0 +1,44 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+buildscript {
+
+    ext {
+        commonValues = [
+                appBaseNameSpace             : 'com.nll.store',
+                releaseMinifyEnabled         : true,
+                debugMinifyEnabled           : true,
+                releaseShrinkResourcesEnabled: false,
+                debugShrinkResourcesEnabled  : false
+        ]
+
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:${libs.versions.androidGradleVersion.get()}"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlinVersion.get()}"
+
+    }
+}
+
+plugins {
+    alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.banes.versions)
+    alias(libs.plugins.kotlin.android) apply(false)
+
+}
+
+allprojects {
+
+    tasks.withType(KotlinCompile).configureEach {
+        kotlinOptions.jvmTarget = libs.versions.javaVersion.get().toString()
+    }
+
+    //use user dir for build. Optional. Using to prevent syncing build files with dropbox
+    buildDir = "${System.properties['user.home']}${File.separator}.build${File.separator}${rootProject.name}${File.separator}${project.name}"
+
+}

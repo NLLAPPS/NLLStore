@@ -1,0 +1,36 @@
+apply plugin: libs.plugins.android.application.get().pluginId
+apply from: "$rootProject.projectDir/commonSettingsAll.gradle"
+
+android {
+    namespace commonValues.appBaseNameSpace
+    ndkPath = "C:\\AndroidDev\\AndroidNDK"
+
+    defaultConfig {
+
+        applicationId commonValues.appBaseNameSpace
+
+        ksp {
+            arg("room.schemaLocation", "$rootDir/schemas")
+            arg("room.incremental", "true")
+        }
+    }
+
+}
+
+dependencies {
+
+    implementation(libs.androidx.coreKtx)
+    implementation(libs.androidx.appCompat)
+    implementation(libs.androidx.activity)
+    implementation(libs.bundles.acraBundle)
+    implementation(libs.androidx.lifecycle.viewModelKtx)
+    implementation(libs.androidx.lifecycle.liveDataKtx)
+    implementation(libs.androidx.constraintLayout)
+    implementation(libs.androidx.fragment)
+    implementation(libs.bundles.roomBundle)
+    implementation(libs.androidx.recyclerView)
+    implementation(libs.google.materialComponents)
+    ksp(libs.androidx.room.compiler)
+    implementation project(":simpleinstaller")
+
+}

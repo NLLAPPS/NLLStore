@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools">
+
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+		android:maxSdkVersion="20" />
+	<uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+	<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+	<uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+	<uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+	<uses-permission android:name="android.permission.VIBRATE" />
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+	<application>
+		<activity
+			android:name=".impl.PackageUninstallerImpl$UninstallLauncherActivity"
+			android:exported="false"
+			android:launchMode="singleTask"
+			android:showForAllUsers="true"
+			android:showOnLockScreen="true"
+			android:showWhenLocked="true"
+			tools:ignore="UnusedAttribute" />
+		<activity
+			android:name=".impl.installer.PackageInstallerApi21$InstallLauncherActivity"
+			android:exported="false"
+			android:launchMode="singleTask"
+			android:showForAllUsers="true"
+			android:showOnLockScreen="true"
+			android:showWhenLocked="true"
+			tools:ignore="UnusedAttribute" />
+		<activity
+			android:name=".impl.installer.PackageInstallerApi16$InstallLauncherActivity"
+			android:exported="false"
+			android:launchMode="singleTask"
+			android:showForAllUsers="true"
+			android:showOnLockScreen="true"
+			android:showWhenLocked="true"
+			tools:ignore="UnusedAttribute" />
+
+		<provider
+			android:name="androidx.startup.InitializationProvider"
+			android:authorities="${applicationId}.androidx-startup"
+			android:exported="false"
+			tools:node="merge">
+			<meta-data
+				android:name="io.github.solrudev.simpleinstaller.SimpleInstallerInitializer"
+				android:value="androidx.startup" />
+		</provider>
+
+		<receiver
+			android:name=".impl.installer.InstallationEventsReceiver"
+			android:exported="false" />
+
+	</application>
+</manifest>

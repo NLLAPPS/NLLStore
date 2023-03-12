@@ -1,0 +1,14 @@
+apply from: "$rootProject.projectDir/commonSettingsLibs.gradle"
+apply from: "$rootProject.projectDir/commonSettingsAll.gradle"
+
+android {
+	namespace "io.github.solrudev.simpleinstaller"
+}
+
+
+dependencies {
+	implementation(libs.androidx.startup)
+	implementation(libs.androidx.appCompat)
+	implementation(libs.androidx.lifecycle.runtimeKtx)
+	implementation(libs.square.okio)
+}

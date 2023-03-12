@@ -1,0 +1,85 @@
+apply plugin: libs.plugins.kotlin.android.get().pluginId
+apply plugin: libs.plugins.kotlin.ksp.get().pluginId
+apply plugin: libs.plugins.kotlin.parcelize.get().pluginId
+
+android {
+
+    def libsJavaVersion = libs.versions.javaVersion.get().toString()
+    def javaVersionEnum = JavaVersion.toVersion(libsJavaVersion)
+
+    compileSdk(libs.versions.compileSdkVersion.get().toInteger())
+    compileOptions {
+        sourceCompatibility javaVersionEnum
+        targetCompatibility javaVersionEnum
+    }
+
+    kotlinOptions {
+        jvmTarget = javaVersionEnum.toString()
+
+    }
+
+    buildFeatures {
+        viewBinding true
+        aidl true
+    }
+
+
+    defaultConfig {
+        minSdk(libs.versions.minSdkVersion.get().toInteger())
+        targetSdk(libs.versions.targetSdkVersion.get().toInteger())
+        versionName(libs.versions.appVersionName.get())
+        versionCode(libs.versions.appVersionCode.get().toInteger())
+        vectorDrawables.useSupportLibrary = true
+        proguardFiles(
+                getDefaultProguardFile('proguard-android.txt'),
+                'proguard-rules.pro',
+                "$rootDir/proguard-rules-StringConcatFactory.pro"
+        )
+        buildConfigField(
+                "Integer", "baseVersionCode", "${libs.versions.appVersionCode.get().toInteger()}"
+        )
+    }
+
+
+    buildTypes {
+        release {
+            minifyEnabled(commonValues.releaseMinifyEnabled)
+            shrinkResources = commonValues.releaseShrinkResourcesEnabled
+        }
+        debug {
+            debuggable true
+            //use proguard on dev builds too in order to avoid multidex issue
+            minifyEnabled(commonValues.debugMinifyEnabled)
+            shrinkResources = commonValues.debugShrinkResourcesEnabled
+        }
+    }
+
+    //for google drive rest and onedrive
+    packaging {
+
+        resources {
+           /* excludes += [
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE',
+                    'META-INF/LICENSE.txt',
+                    'META-INF/license.txt',
+                    'META-INF/NOTICE',
+                    'META-INF/NOTICE.txt',
+                    'META-INF/notice.txt',
+                    'META-INF/ASL2.0',
+                    'META-INF/MANIFEST.MF',
+                    'META-INF/atomicfu.kotlin_module',
+                    'META-INF/maven/com.google.guava/guava/pom.properties',
+                    'META-INF/maven/com.google.guava/guava/pom.xml',
+                    'META-INF/jersey-module-version'
+            ]*/
+
+
+        }
+    }
+
+}
+
+dependencies {
+    implementation(libs.bundles.coroutinesBundle)
+}

@@ -1,0 +1,7 @@
+apply plugin: libs.plugins.android.library.get().pluginId
+android{
+
+    defaultConfig {
+        consumerProguardFiles 'proguard-rules.pro'
+    }
+}
