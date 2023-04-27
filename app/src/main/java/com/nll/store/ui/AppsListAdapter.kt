@@ -1,53 +1,57 @@
 package com.nll.store.ui
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.nll.store.databinding.RowAppItemBinding
+import com.nll.store.log.CLog
+import com.nll.store.model.AppData
 
-import com.nll.store.AppData
-import com.nll.store.R
-import com.nll.store.databinding.AppItemBinding
+
+class AppsListAdapter(private val callback: CallBack) : ListAdapter<AppData, AppsListAdapter.AppViewHolder>(DiffCallback) {
+    private val logTag = "AppsListAdapter"
+    override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
+        holder.bind(getItem(position), callback, position)
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
+        return AppViewHolder(RowAppItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+    }
+
+    fun interface CallBack {
+        fun onAppDataClick(data: AppData, position: Int)
+    }
+
+    class AppViewHolder(private val binding: RowAppItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        private val logTag = "AppViewHolder"
+        fun bind(data: AppData, callback: CallBack, position: Int) {
+            if (CLog.isDebug()) {
+                CLog.log(logTag, "bind() -> data: $data")
+            }
+            binding.root.setOnClickListener {
+                callback.onAppDataClick(data, position)
+            }
+            data.loadIcon(binding.appIcon)
+            binding.appName.text = data.storeAppData.name
+            binding.appDescription.text = data.storeAppData.description
 
 
-class AppsListAdapter(private val onClick: (AppData) -> Unit) :
-	ListAdapter<AppData, AppsListAdapter.AppViewHolder>(AppDataDiffCallback) {
+        }
 
-	class AppViewHolder(itemView: View, val onClick: (AppData) -> Unit) : RecyclerView.ViewHolder(itemView) {
+    }
 
-		private val binding = AppItemBinding.bind(itemView)
-		private var currentAppData: AppData? = null
+    object DiffCallback : DiffUtil.ItemCallback<AppData>() {
+        override fun areItemsTheSame(oldItem: AppData, newItem: AppData): Boolean {
+            return oldItem.getId() == newItem.getId()
+        }
 
-		init {
-			itemView.setOnClickListener {
-				currentAppData?.let {
-					onClick(it)
-				}
-			}
-		}
+        override fun areContentsTheSame(oldItem: AppData, newItem: AppData): Boolean {
+            return oldItem == newItem
+        }
 
-		fun bind(data: AppData) {
-			currentAppData = data
-			binding.appIcon.setImageDrawable(data.icon)
-			binding.appName.text = data.name
-			binding.appPackageName.text = data.packageName
-		}
-	}
 
-	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
-		val view = LayoutInflater.from(parent.context).inflate(R.layout.app_item, parent, false)
-		return AppViewHolder(view, onClick)
-	}
-
-	override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
-		val appData = getItem(position)
-		holder.bind(appData)
-	}
-}
-
-object AppDataDiffCallback : DiffUtil.ItemCallback<AppData>() {
-	override fun areItemsTheSame(oldItem: AppData, newItem: AppData) = oldItem.id == newItem.id
-	override fun areContentsTheSame(oldItem: AppData, newItem: AppData) = oldItem == newItem
+    }
 }

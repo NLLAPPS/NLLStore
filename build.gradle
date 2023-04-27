@@ -29,6 +29,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.banes.versions)
     alias(libs.plugins.kotlin.android) apply(false)
+    alias(libs.plugins.kotlin.serialization) apply(false)
 
 }
 
@@ -38,7 +39,6 @@ allprojects {
         kotlinOptions.jvmTarget = libs.versions.javaVersion.get().toString()
     }
 
-    //use user dir for build. Optional. Using to prevent syncing build files with dropbox
     buildDir = "${System.properties['user.home']}${File.separator}.build${File.separator}${rootProject.name}${File.separator}${project.name}"
 
 }

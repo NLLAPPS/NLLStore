@@ -1,4 +1,8 @@
 <resources>
 
-	<string name="app_name" translatable="false">NLL Store</string>
+    <string name="app_name" translatable="false">NLL Store</string>
+    <string name="ongoing_installation">Please wait ongoing installation to finish</string>
+    <string name="app_icon">App icon</string>
+    <string name="internet_conn_required">Internet connection required</string>
+    <string name="install">Install</string>
 </resources>

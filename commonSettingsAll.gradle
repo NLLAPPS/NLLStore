@@ -32,8 +32,7 @@ android {
         vectorDrawables.useSupportLibrary = true
         proguardFiles(
                 getDefaultProguardFile('proguard-android.txt'),
-                'proguard-rules.pro',
-                "$rootDir/proguard-rules-StringConcatFactory.pro"
+                'proguard-rules.pro'
         )
         buildConfigField(
                 "Integer", "baseVersionCode", "${libs.versions.appVersionCode.get().toInteger()}"

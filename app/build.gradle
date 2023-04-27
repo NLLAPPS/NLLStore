@@ -1,12 +1,14 @@
+plugins {
+    alias(libs.plugins.kotlin.android)
+}
 apply plugin: libs.plugins.android.application.get().pluginId
 apply from: "$rootProject.projectDir/commonSettingsAll.gradle"
+apply plugin: libs.plugins.kotlin.serialization.get().pluginId
 
 android {
     namespace commonValues.appBaseNameSpace
-    ndkPath = "C:\\AndroidDev\\AndroidNDK"
 
     defaultConfig {
-
         applicationId commonValues.appBaseNameSpace
 
         ksp {
@@ -18,7 +20,8 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.coil)
+    implementation(libs.bundles.ktorBundle)
     implementation(libs.androidx.coreKtx)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.activity)
