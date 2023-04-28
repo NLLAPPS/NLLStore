@@ -8,4 +8,6 @@
     <string name="error_placeholder">Error: %1$s</string>
     <string name="retry">Retry</string>
     <string name="unknown_error">Unknown error</string>
+    <string name="open">Open</string>
+    <string name="update">Update</string>
 </resources>

@@ -21,6 +21,8 @@ import com.nll.store.connectivity.InternetStateProvider
 import com.nll.store.databinding.ActivityAppListBinding
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
+import com.nll.store.model.LocalAppData
+import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
 import io.github.solrudev.simpleinstaller.activityresult.InstallPermissionContract
 import kotlinx.coroutines.flow.onEach
@@ -61,7 +63,29 @@ class AppListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAppListBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        appsListAdapter = AppsListAdapter { data, position -> onAppClick(data) }
+        appsListAdapter = AppsListAdapter(object: AppsListAdapter.CallBack{
+            override fun onCardClick(data: AppData, position: Int) {
+                if (CLog.isDebug()) {
+                    CLog.log(logTag, "AppsListAdapter() -> onCardClick() -> data: $data")
+                }
+            }
+
+            override fun onInstallClick(storeAppData: StoreAppData, position: Int) {
+                if (CLog.isDebug()) {
+                    CLog.log(logTag, "AppsListAdapter() -> onInstallClick() -> storeAppData: $storeAppData")
+                }
+            }
+
+            override fun onOpenClick(localAppData: LocalAppData, position: Int) {
+                if (CLog.isDebug()) {
+                    CLog.log(logTag, "AppsListAdapter() -> onOpenClick() -> localAppData: $localAppData")
+                }
+               packageManager.getLaunchIntentForPackage(localAppData.packageName)?.let {
+                   startActivity(it)
+               }
+            }
+
+        })
 
         with(binding.recyclerView) {
             val linearLayoutManager = LinearLayoutManager(this@AppListActivity)
@@ -196,9 +220,6 @@ class AppListActivity : AppCompatActivity() {
 
     }
 
-    private fun onAppClick(localAppData: AppData) {
-
-    }
 
     private fun requestPermissions() {
         if (packageManager.canRequestPackageInstalls()) {

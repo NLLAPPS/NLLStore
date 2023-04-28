@@ -9,10 +9,12 @@ import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.util.DebugLogger
 import com.nll.store.connectivity.InternetStateProvider
+import com.nll.store.log.CLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import java.util.concurrent.Executors
+
 
 class App : Application(), ImageLoaderFactory {
     companion object {
@@ -36,14 +38,20 @@ class App : Application(), ImageLoaderFactory {
 
     override fun onCreate() {
         super.onCreate()
+        if (CLog.isDebug()) {
+            CLog.log(logTag, "onCreate()")
+        }
         INSTANCE = this
         initACRA()
         InternetStateProvider.start(this)
-
     }
 
 
+
     private fun initACRA() {
+        if (CLog.isDebug()) {
+            CLog.log(logTag, "initACRA()")
+        }
         /* try {
              initAcra {
 

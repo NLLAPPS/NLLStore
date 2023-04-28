@@ -1,6 +1,8 @@
 package com.nll.store.ui
 
 import android.app.Application
+import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -11,9 +13,12 @@ import com.nll.store.api.ApiException
 import com.nll.store.api.NLLStoreApi
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
-import com.nll.store.model.InstallState
+import com.nll.store.model.AppInstallState
+import com.nll.store.model.InstallSessionState
 import com.nll.store.model.LocalAppData
+import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
+import com.nll.store.utils.PackageReceiver
 import com.nll.store.utils.getInstalledApplicationsCompat
 import io.github.solrudev.simpleinstaller.PackageInstaller
 import io.github.solrudev.simpleinstaller.PackageUninstaller
@@ -32,62 +37,84 @@ import java.util.concurrent.TimeUnit
 
 class AppListActivityViewModel(private val app: Application) : AndroidViewModel(app) {
     private val logTag = "AppListActivityViewModel"
+    private val nllPackages = "com.nll."
     private val nllStoreApi = NLLStoreApi()
     private val _appsList = MutableStateFlow(listOf<AppData>())
     val appsList = _appsList.asStateFlow()
-
     private val _storeConnectionState = MutableStateFlow<StoreConnectionState>(StoreConnectionState.Connected)
     val storeConnectionState = _storeConnectionState.asStateFlow()
-
-    private val _installState = MutableStateFlow<InstallState>(InstallState.Idle)
-    val installState = _installState.asStateFlow()
+    private val _installSessionState = MutableStateFlow<InstallSessionState>(InstallSessionState.Idle)
+    val installState = _installSessionState.asStateFlow()
     private var installJob: Job? = null
-    private var lastAppListLoadTime = 0L
+    private var lastStoreAppListLoadTime = 0L
+    private var storeAppList: List<StoreAppData> = listOf()
     val isUninstalling get() = PackageUninstaller.hasActiveSession
     val isInstalling get() = PackageInstaller.hasActiveSession
 
+
+    init {
+        registerPackageReceiver()
+    }
+
     fun loadAppList() {
 
-        val shouldLoad = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - lastAppListLoadTime) > 10
+        //Rate limit remote connectivity
+        val shouldLoadFromRemote = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - lastStoreAppListLoadTime) > 60
         if (CLog.isDebug()) {
-            CLog.log(logTag, "loadAppList() -> shouldLoad: $shouldLoad")
+            CLog.log(logTag, "loadAppList() -> shouldLoadFromRemote: $shouldLoadFromRemote")
         }
 
-        if (shouldLoad) {
-            _storeConnectionState.value = StoreConnectionState.Connecting
+        _storeConnectionState.value = StoreConnectionState.Connecting
 
-            viewModelScope.launch(Dispatchers.IO) {
-                val localAppList = getInstalledAppsList("com.nll")
+        viewModelScope.launch(Dispatchers.IO) {
+            val localAppList = try {
+                getInstalledAppsList()
+            } catch (e: Exception) {
                 if (CLog.isDebug()) {
-                    CLog.log(logTag, "loadAppList() -> localAppList: ${localAppList.joinToString("\n")}")
+                    CLog.log(logTag, "loadAppList() -> Error while loading localAppList")
                 }
-                try {
-                    val storeAppList = nllStoreApi.getStoreAppList()
-                    if (CLog.isDebug()) {
-                        CLog.log(logTag, "loadAppList() -> storeAppList: ${storeAppList.joinToString("\n")}")
+                listOf()
+            }
+            if (CLog.isDebug()) {
+                CLog.log(logTag, "loadAppList() -> localAppList: ${localAppList.joinToString("\n")}")
+            }
+            try {
+                storeAppList = if (shouldLoadFromRemote) {
+                    nllStoreApi.getStoreAppList()
+                } else {
+                    storeAppList
+                }
+                if (CLog.isDebug()) {
+                    CLog.log(logTag, "loadAppList() -> storeAppList: ${storeAppList.joinToString("\n")}")
+                }
+                _appsList.value = storeAppList.map { storeAppData ->
+                    val localAppData = localAppList.firstOrNull { it.packageName == storeAppData.packageName }
+                    val appInstallState = if (localAppData == null) {
+                        AppInstallState.NotInstalled
+                    } else {
+                        AppInstallState.Installed(localAppData)
                     }
-                    _appsList.value = storeAppList.map { storeAppData ->
-                        AppData(storeAppData, localAppList.firstOrNull { it.packageName == storeAppData.packageName })
-                    }
-                    lastAppListLoadTime = System.currentTimeMillis()
-                    _storeConnectionState.value = StoreConnectionState.Connected
-                } catch (e: Exception) {
-                    if (CLog.isDebug()) {
-                        CLog.log(logTag, "loadAppList() -> Error when requesting app list!")
-                    }
-                    CLog.logPrintStackTrace(e)
-                    _storeConnectionState.value = StoreConnectionState.Failed(e as? ApiException ?: ApiException.GenericException(e))
+                    AppData(storeAppData, appInstallState)
+                }
+                lastStoreAppListLoadTime = System.currentTimeMillis()
+                _storeConnectionState.value = StoreConnectionState.Connected
+            } catch (e: Exception) {
+                if (CLog.isDebug()) {
+                    CLog.log(logTag, "loadAppList() -> Error while requesting app list!")
+                }
+                CLog.logPrintStackTrace(e)
+                _storeConnectionState.value = StoreConnectionState.Failed(e as? ApiException ?: ApiException.GenericException(e))
 
-                }
             }
         }
+
     }
 
 
-    private fun getInstalledAppsList(packageNameToFilter: String) = app.packageManager.getInstalledApplicationsCompat(0)
+    private fun getInstalledAppsList() = app.packageManager.getInstalledApplicationsCompat(0)
         //Exclude ourselves
         .filter { it.packageName != app.packageName }
-        .filter { it.packageName.startsWith(packageNameToFilter) }
+        .filter { it.packageName.startsWith(nllPackages) }
         .map {
             val icon = app.packageManager.getApplicationIcon(it)
             val appName = app.packageManager.getApplicationLabel(it) as String
@@ -107,25 +134,28 @@ class AppListActivityViewModel(private val app: Application) : AndroidViewModel(
             CLog.log(logTag, "uninstallPackage() -> appData: $appData")
         }
 
-        appData.localAppData?.let { localAppData ->
-            _installState.value = InstallState.Uninstalling(localAppData)
-            viewModelScope.launch {
-                val result = PackageUninstaller.uninstallPackage(localAppData.packageName) {
-                    confirmationStrategy = ConfirmationStrategy.IMMEDIATE
-                }
-                if (result) {
-                    loadAppList()
+        when (appData.appInstallState) {
+            is AppInstallState.Installed -> {
+                _installSessionState.value = InstallSessionState.Uninstalling(appData.appInstallState.localAppData)
+                viewModelScope.launch {
+                    val result = PackageUninstaller.uninstallPackage(appData.appInstallState.localAppData.packageName) {
+                        confirmationStrategy = ConfirmationStrategy.IMMEDIATE
+                    }
+                    if (result) {
+                        loadAppList()
+                    }
                 }
             }
-        } ?: throw IllegalArgumentException("Cannot uninstall null localAppData!")
 
+            AppInstallState.NotInstalled -> throw IllegalArgumentException("Cannot uninstall not installed app ($appData)")
+        }
     }
 
     fun installPackage(uri: Uri) {
         if (CLog.isDebug()) {
             CLog.log(logTag, "installPackage() -> uri: $uri")
         }
-        _installState.value = InstallState.Installing(uri)
+        _installSessionState.value = InstallSessionState.Installing(uri)
         installJob = viewModelScope.launch(Dispatchers.IO) {
             try {
 
@@ -138,16 +168,38 @@ class AppListActivityViewModel(private val app: Application) : AndroidViewModel(
                 if (CLog.isDebug()) {
                     CLog.log(logTag, "installPackage() -> installResult: $installResult")
                 }
-                _installState.value = InstallState.Completed(uri, installResult)
+                _installSessionState.value = InstallSessionState.Completed(uri, installResult)
 
             } catch (e: Exception) {
-                _installState.value = InstallState.Completed(uri, InstallResult.Failure(InstallFailureCause.Aborted(e.message)))
+                _installSessionState.value = InstallSessionState.Completed(uri, InstallResult.Failure(InstallFailureCause.Aborted(e.message)))
             }
         }
     }
 
     fun cancelInstall() {
         installJob?.cancel()
+    }
+
+    private fun registerPackageReceiver() {
+        if (CLog.isDebug()) {
+            CLog.log(logTag, "registerPackageReceiver()")
+        }
+        val pkgFilter = IntentFilter().apply {
+            priority = IntentFilter.SYSTEM_HIGH_PRIORITY
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addAction(Intent.ACTION_PACKAGE_DATA_CLEARED)
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_CHANGED)
+            addDataScheme("package")
+        }
+
+        app.registerReceiver(PackageReceiver { packageName ->
+            if (CLog.isDebug()) {
+                CLog.log(logTag, "registerPackageReceiver() -> callback() -> packageName: $packageName")
+            }
+            loadAppList()
+        }, pkgFilter)
     }
 
 

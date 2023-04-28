@@ -2,17 +2,23 @@ package com.nll.store.model
 
 import android.widget.ImageView
 
-data class AppData(val storeAppData: StoreAppData, val localAppData: LocalAppData?) {
+data class AppData(val storeAppData: StoreAppData, val appInstallState: AppInstallState) {
 
 
     fun getId() = storeAppData.getId()
 
     fun loadIcon(imageView: ImageView) {
 
-        localAppData?.icon?.let {
-            imageView.setImageDrawable(it)
-        } ?: storeAppData.loadLogo(imageView)
+        when (appInstallState) {
+            is AppInstallState.Installed -> imageView.setImageDrawable(appInstallState.localAppData.icon)
+            AppInstallState.NotInstalled -> storeAppData.loadLogo(imageView)
+
+        }
     }
 
-    fun isInstalled() = localAppData != null
+    fun canBeUpdated() = when (appInstallState) {
+        is AppInstallState.Installed -> storeAppData.version > appInstallState.localAppData.versionCode
+        AppInstallState.NotInstalled -> false
+
+    }
 }
