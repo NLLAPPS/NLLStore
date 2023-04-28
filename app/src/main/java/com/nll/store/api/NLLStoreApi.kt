@@ -8,10 +8,9 @@ import io.ktor.http.contentType
 
 class NLLStoreApi() {
     private val transport = HttpTransport(Client.createHttpClient())
-    private val appDataPath = "apps.json"
     suspend fun getStoreAppList(): List<StoreAppData> = transport.perform {
         it.get {
-            url(path = appDataPath)
+            url(path = "apps.json")
             contentType(ContentType.Any)
         }
     }

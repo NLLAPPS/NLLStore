@@ -5,4 +5,7 @@
     <string name="app_icon">App icon</string>
     <string name="internet_conn_required">Internet connection required</string>
     <string name="install">Install</string>
+    <string name="error_placeholder">Error: %1$s</string>
+    <string name="retry">Retry</string>
+    <string name="unknown_error">Unknown error</string>
 </resources>

@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:padding="@dimen/app_list_padding"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="@dimen/app_list_padding">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
@@ -17,6 +17,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:title="@string/app_name" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/loadingProgressIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:hideAnimationBehavior="outward"
+            app:showAnimationBehavior="inward"
+            app:trackCornerRadius="3dp"
+            tools:visibility="visible" />
     </com.google.android.material.appbar.AppBarLayout>
 
 

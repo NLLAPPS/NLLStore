@@ -7,11 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.nll.store.R
+import com.nll.store.api.ApiException
 import com.nll.store.api.NLLStoreApi
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
 import com.nll.store.model.InstallState
 import com.nll.store.model.LocalAppData
+import com.nll.store.model.StoreConnectionState
 import com.nll.store.utils.getInstalledApplicationsCompat
 import io.github.solrudev.simpleinstaller.PackageInstaller
 import io.github.solrudev.simpleinstaller.PackageUninstaller
@@ -33,6 +35,10 @@ class AppListActivityViewModel(private val app: Application) : AndroidViewModel(
     private val nllStoreApi = NLLStoreApi()
     private val _appsList = MutableStateFlow(listOf<AppData>())
     val appsList = _appsList.asStateFlow()
+
+    private val _storeConnectionState = MutableStateFlow<StoreConnectionState>(StoreConnectionState.Connected)
+    val storeConnectionState = _storeConnectionState.asStateFlow()
+
     private val _installState = MutableStateFlow<InstallState>(InstallState.Idle)
     val installState = _installState.asStateFlow()
     private var installJob: Job? = null
@@ -47,24 +53,36 @@ class AppListActivityViewModel(private val app: Application) : AndroidViewModel(
             CLog.log(logTag, "loadAppList() -> shouldLoad: $shouldLoad")
         }
 
-        if(shouldLoad) {
+        if (shouldLoad) {
+            _storeConnectionState.value = StoreConnectionState.Connecting
+
             viewModelScope.launch(Dispatchers.IO) {
                 val localAppList = getInstalledAppsList("com.nll")
                 if (CLog.isDebug()) {
                     CLog.log(logTag, "loadAppList() -> localAppList: ${localAppList.joinToString("\n")}")
                 }
-                val storeAppList = nllStoreApi.getStoreAppList()
-                if (CLog.isDebug()) {
-                    CLog.log(logTag, "loadAppList() -> storeAppList: ${storeAppList.joinToString("\n")}")
-                }
+                try {
+                    val storeAppList = nllStoreApi.getStoreAppList()
+                    if (CLog.isDebug()) {
+                        CLog.log(logTag, "loadAppList() -> storeAppList: ${storeAppList.joinToString("\n")}")
+                    }
+                    _appsList.value = storeAppList.map { storeAppData ->
+                        AppData(storeAppData, localAppList.firstOrNull { it.packageName == storeAppData.packageName })
+                    }
+                    lastAppListLoadTime = System.currentTimeMillis()
+                    _storeConnectionState.value = StoreConnectionState.Connected
+                } catch (e: Exception) {
+                    if (CLog.isDebug()) {
+                        CLog.log(logTag, "loadAppList() -> Error when requesting app list!")
+                    }
+                    CLog.logPrintStackTrace(e)
+                    _storeConnectionState.value = StoreConnectionState.Failed(e as? ApiException ?: ApiException.GenericException(e))
 
-                _appsList.value = storeAppList.map { storeAppData ->
-                    AppData(storeAppData, localAppList.firstOrNull { it.packageName == storeAppData.packageName })
                 }
-                lastAppListLoadTime = System.currentTimeMillis()
             }
         }
     }
+
 
     private fun getInstalledAppsList(packageNameToFilter: String) = app.packageManager.getInstalledApplicationsCompat(0)
         //Exclude ourselves

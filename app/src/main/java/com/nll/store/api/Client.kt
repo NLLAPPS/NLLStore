@@ -19,7 +19,6 @@ import kotlin.time.DurationUnit
 
 object Client {
     private const val logTag = "Client"
-
     private const val apiUrl = "https://acr.app/store/api/"
     private val timeoutConfig = Timeout(request = 30.seconds, connect = 30.seconds, socket = 30.seconds)
     private val retryStrategy = RetryStrategy()
@@ -49,6 +48,7 @@ object Client {
                 }
             }
         }
+
 
 
         install(HttpTimeout) {

@@ -10,6 +10,7 @@ import androidx.activity.result.launch
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -20,6 +21,7 @@ import com.nll.store.connectivity.InternetStateProvider
 import com.nll.store.databinding.ActivityAppListBinding
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
+import com.nll.store.model.StoreConnectionState
 import io.github.solrudev.simpleinstaller.activityresult.InstallPermissionContract
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -75,6 +77,8 @@ class AppListActivity : AppCompatActivity() {
             addItemDecoration(divider)
         }
 
+        observerStoreConnectionState()
+
         observerAppList()
         observerInstallState()
         observeNetworkState()
@@ -92,6 +96,45 @@ class AppListActivity : AppCompatActivity() {
                         CLog.log(logTag, "observerAppList() -> appDatas: $appDatas")
                     }
                     appsListAdapter.submitList(appDatas)
+                }
+            }
+        }
+
+    }
+
+    private fun observerStoreConnectionState() {
+        if (CLog.isDebug()) {
+            CLog.log(logTag, "observerStoreConnectionState()")
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.storeConnectionState.collect { storeConnectionState ->
+                    if (CLog.isDebug()) {
+                        CLog.log(logTag, "observerStoreConnectionState() -> storeConnectionState: $storeConnectionState")
+                    }
+                    when (storeConnectionState) {
+                        StoreConnectionState.Connected -> binding.loadingProgressIndicator.isVisible = false
+                        StoreConnectionState.Connecting -> binding.loadingProgressIndicator.isVisible = true
+                        is StoreConnectionState.Failed -> {
+
+                            binding.loadingProgressIndicator.isVisible = false
+
+                            val errorMessage = getString(R.string.error_placeholder, storeConnectionState.apiException.message ?: getString(R.string.unknown_error))
+                            val actionText = getString(R.string.retry)
+                            SnackProvider.provideDefaultSnack(root = binding.root, snackText = errorMessage, snackActionText = actionText, snackClickListener = object : SnackProvider.ViewClickListener {
+
+                                override fun onSnackViewClick() {
+                                    viewModel.loadAppList()
+                                }
+
+                                override fun onActionClick() {
+                                    viewModel.loadAppList()
+                                }
+
+                            }).show()
+                        }
+                    }
+
                 }
             }
         }
