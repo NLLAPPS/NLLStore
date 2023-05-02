@@ -1,4 +1,4 @@
-package com.nll.asr.network.connectivity
+package com.nll.store.connectivity
 
 
 data class NetworkState(

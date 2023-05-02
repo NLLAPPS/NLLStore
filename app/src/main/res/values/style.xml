@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <style name="Widget.AppTheme.FullScreenDialog" parent="AppTheme" >
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowBackground">?android:colorBackground</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+            <item name="android:windowAnimationStyle">@style/FullScreenDialogAnimationsAnimationStyle</item>
+
+    </style>
+        <style name="FullScreenDialogAnimationsAnimationStyle">
+            <item name="android:windowEnterAnimation">@anim/fullscreen_dialog_slide_in_bottom</item>
+            <item name="android:windowExitAnimation">@anim/fullscreen_dialog_slide_out_bottom</item>
+        </style>
+</resources>

@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.bundles.roomBundle)
     implementation(libs.androidx.recyclerView)
     implementation(libs.google.materialComponents)
+    implementation(libs.square.okHttp.loggingInterceptor)
     ksp(libs.androidx.room.compiler)
     implementation project(":simpleinstaller")
 

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="fullscreen_dialog_slide_in_duration">200</integer>
+    <integer name="fullscreen_dialog_slide_out_duration">200</integer>
+</resources>

@@ -16,6 +16,7 @@ data class StoreAppData(
     @SerialName("downloadUrl") val downloadUrl: String,
     @SerialName("logoUrl") val logoUrl: String,
     @SerialName("description") val description: String,
+    @SerialName("versionNotes") val versionNotes: String,
     @SerialName("website") val website: String
 ){
     fun getId() = packageName.hashCode()

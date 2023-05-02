@@ -3,53 +3,36 @@ package com.nll.store.ui
 import android.app.Application
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.nll.store.R
 import com.nll.store.api.ApiException
 import com.nll.store.api.NLLStoreApi
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
 import com.nll.store.model.AppInstallState
-import com.nll.store.model.InstallSessionState
 import com.nll.store.model.LocalAppData
 import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
 import com.nll.store.utils.PackageReceiver
 import com.nll.store.utils.getInstalledApplicationsCompat
-import io.github.solrudev.simpleinstaller.PackageInstaller
-import io.github.solrudev.simpleinstaller.PackageUninstaller
-import io.github.solrudev.simpleinstaller.data.ConfirmationStrategy
-import io.github.solrudev.simpleinstaller.data.InstallFailureCause
-import io.github.solrudev.simpleinstaller.data.InstallResult
-import io.github.solrudev.simpleinstaller.data.notification
-import io.github.solrudev.simpleinstaller.installPackage
-import io.github.solrudev.simpleinstaller.uninstallPackage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
-class AppListActivityViewModel(private val app: Application) : AndroidViewModel(app) {
-    private val logTag = "AppListActivityViewModel"
+class StoreApiViewModel(private val app: Application) : AndroidViewModel(app) {
+    private val logTag = "StoreApiViewModel"
     private val nllPackages = "com.nll."
     private val nllStoreApi = NLLStoreApi()
     private val _appsList = MutableStateFlow(listOf<AppData>())
     val appsList = _appsList.asStateFlow()
     private val _storeConnectionState = MutableStateFlow<StoreConnectionState>(StoreConnectionState.Connected)
     val storeConnectionState = _storeConnectionState.asStateFlow()
-    private val _installSessionState = MutableStateFlow<InstallSessionState>(InstallSessionState.Idle)
-    val installState = _installSessionState.asStateFlow()
-    private var installJob: Job? = null
     private var lastStoreAppListLoadTime = 0L
     private var storeAppList: List<StoreAppData> = listOf()
-    val isUninstalling get() = PackageUninstaller.hasActiveSession
-    val isInstalling get() = PackageInstaller.hasActiveSession
 
 
     init {
@@ -129,56 +112,6 @@ class AppListActivityViewModel(private val app: Application) : AndroidViewModel(
         }
         .sortedBy { it.name }
 
-    fun uninstallPackage(appData: AppData) {
-        if (CLog.isDebug()) {
-            CLog.log(logTag, "uninstallPackage() -> appData: $appData")
-        }
-
-        when (appData.appInstallState) {
-            is AppInstallState.Installed -> {
-                _installSessionState.value = InstallSessionState.Uninstalling(appData.appInstallState.localAppData)
-                viewModelScope.launch {
-                    val result = PackageUninstaller.uninstallPackage(appData.appInstallState.localAppData.packageName) {
-                        confirmationStrategy = ConfirmationStrategy.IMMEDIATE
-                    }
-                    if (result) {
-                        loadAppList()
-                    }
-                }
-            }
-
-            AppInstallState.NotInstalled -> throw IllegalArgumentException("Cannot uninstall not installed app ($appData)")
-        }
-    }
-
-    fun installPackage(uri: Uri) {
-        if (CLog.isDebug()) {
-            CLog.log(logTag, "installPackage() -> uri: $uri")
-        }
-        _installSessionState.value = InstallSessionState.Installing(uri)
-        installJob = viewModelScope.launch(Dispatchers.IO) {
-            try {
-
-                val installResult = PackageInstaller.installPackage(uri) {
-                    setConfirmationStrategy(ConfirmationStrategy.IMMEDIATE)
-                    notification {
-                        icon = R.drawable.ic_install
-                    }
-                }
-                if (CLog.isDebug()) {
-                    CLog.log(logTag, "installPackage() -> installResult: $installResult")
-                }
-                _installSessionState.value = InstallSessionState.Completed(uri, installResult)
-
-            } catch (e: Exception) {
-                _installSessionState.value = InstallSessionState.Completed(uri, InstallResult.Failure(InstallFailureCause.Aborted(e.message)))
-            }
-        }
-    }
-
-    fun cancelInstall() {
-        installJob?.cancel()
-    }
 
     private fun registerPackageReceiver() {
         if (CLog.isDebug()) {
@@ -206,7 +139,7 @@ class AppListActivityViewModel(private val app: Application) : AndroidViewModel(
     @Suppress("UNCHECKED_CAST")
     class Factory(private val app: Application) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return AppListActivityViewModel(app) as T
+            return StoreApiViewModel(app) as T
         }
     }
 }

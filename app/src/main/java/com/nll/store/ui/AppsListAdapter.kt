@@ -25,6 +25,7 @@ class AppsListAdapter(private val callback: CallBack) : ListAdapter<AppData, App
         fun onCardClick(data: AppData, position: Int)
         fun onInstallClick(storeAppData: StoreAppData, position: Int)
         fun onOpenClick(localAppData: LocalAppData, position: Int)
+        fun onUpdateClick(storeAppData: StoreAppData,  localAppData: LocalAppData, position: Int)
     }
 
     object DiffCallback : DiffUtil.ItemCallback<AppData>() {

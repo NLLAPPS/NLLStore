@@ -3,7 +3,6 @@ package com.nll.store.connectivity
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import com.nll.asr.network.connectivity.NetworkState
 import com.nll.store.log.CLog
 
 internal class InternetStateMonitor(private val connectivityManager: ConnectivityManager?, private val callBack: (NetworkState) -> Unit) : ConnectivityManager.NetworkCallback() {

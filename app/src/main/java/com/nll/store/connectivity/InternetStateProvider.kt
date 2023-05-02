@@ -3,7 +3,6 @@ package com.nll.store.connectivity
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import com.nll.asr.network.connectivity.NetworkState
 import com.nll.store.log.CLog
 import com.nll.store.utils.extConnectivityManager
 import com.nll.store.utils.extTryStartActivity

@@ -55,6 +55,7 @@ internal object PackageInstallerApi21 : MinimalPackageInstaller {
 			val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 				sessionParams.setInstallReason(PackageManager.INSTALL_REASON_USER)
+
 			}
 			sessionId = packageInstaller.createSession(sessionParams)
 			sessionCallback = packageInstaller.createAndRegisterSessionCallback(sessionId)

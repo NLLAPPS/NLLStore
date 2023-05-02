@@ -13,12 +13,22 @@ class AppListViewHolder(private val binding: RowAppItemBinding) : RecyclerView.V
         if (CLog.isDebug()) {
             CLog.log(logTag, "bind() -> data: $data")
         }
-        binding.root.setOnClickListener {
+
+        binding.appInfo.setOnClickListener {
             callback.onCardClick(data, position)
         }
+
         binding.appActionButton.setOnClickListener {
+
             when (data.appInstallState) {
-                is AppInstallState.Installed -> callback.onOpenClick(data.appInstallState.localAppData, position)
+                is AppInstallState.Installed -> {
+                    if (data.canBeUpdated()) {
+                        callback.onUpdateClick(data.storeAppData, data.appInstallState.localAppData, position)
+                    } else {
+                        callback.onOpenClick(data.appInstallState.localAppData, position)
+                    }
+                }
+
                 AppInstallState.NotInstalled -> callback.onInstallClick(data.storeAppData, position)
             }
 
@@ -27,8 +37,8 @@ class AppListViewHolder(private val binding: RowAppItemBinding) : RecyclerView.V
         data.loadIcon(binding.appIcon)
         binding.appName.text = data.storeAppData.name
         binding.appDescription.text = data.storeAppData.description
-
         binding.appActionButton.text = when (data.appInstallState) {
+
             is AppInstallState.Installed -> {
                 if (data.canBeUpdated()) {
                     binding.root.context.getString(R.string.update)

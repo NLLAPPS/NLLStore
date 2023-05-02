@@ -1,8 +1,6 @@
 package com.nll.store.ui
 
-import android.Manifest
 import android.content.ActivityNotFoundException
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,51 +17,61 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.nll.store.R
 import com.nll.store.connectivity.InternetStateProvider
 import com.nll.store.databinding.ActivityAppListBinding
+import com.nll.store.installer.AppInstallManager
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
 import com.nll.store.model.LocalAppData
 import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
 import io.github.solrudev.simpleinstaller.activityresult.InstallPermissionContract
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 
 class AppListActivity : AppCompatActivity() {
     private val logTag = "AppListActivity"
     private lateinit var binding: ActivityAppListBinding
-    private val viewModel: AppListActivityViewModel by viewModels {
-        AppListActivityViewModel.Factory(application)
+    private lateinit var appInstallManager : AppInstallManager
+    private val storeApiViewModel: StoreApiViewModel by viewModels {
+        StoreApiViewModel.Factory(application)
     }
     private lateinit var appsListAdapter: AppsListAdapter
+
     private val installPermissionLauncher = registerForActivityResult(InstallPermissionContract()) { isGranted ->
         if (CLog.isDebug()) {
             CLog.log(logTag, "installPermissionLauncher() -> isGranted: $isGranted")
         }
-        if (isGranted) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
+        val message = if (isGranted) {
+            R.string.install_permission_granted
+        } else {
+            R.string.permission_denied
         }
+
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
     }
 
-    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-
-        if (CLog.isDebug()) {
-            CLog.log(logTag, "notificationPermissionLauncher() -> isGranted: $isGranted")
-        }
-    }
 
     private val pickApkLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let(viewModel::installPackage)
+        uri?.let {
+            appInstallManager.install(it)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAppListBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        appsListAdapter = AppsListAdapter(object: AppsListAdapter.CallBack{
+
+        appInstallManager = AppInstallManager.getInstance(this)
+
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            if (item.itemId == R.id.selectApkAndInstall) {
+                pickAndInstall()
+            }
+            true
+        }
+
+        appsListAdapter = AppsListAdapter(object : AppsListAdapter.CallBack {
             override fun onCardClick(data: AppData, position: Int) {
                 if (CLog.isDebug()) {
                     CLog.log(logTag, "AppsListAdapter() -> onCardClick() -> data: $data")
@@ -74,15 +82,41 @@ class AppListActivity : AppCompatActivity() {
                 if (CLog.isDebug()) {
                     CLog.log(logTag, "AppsListAdapter() -> onInstallClick() -> storeAppData: $storeAppData")
                 }
+                if (!appInstallManager.isInstalling()) {
+
+                    if (packageManager.canRequestPackageInstalls()) {
+                        appInstallManager.startDownload(storeAppData, null)
+                        InstallAppFragment.display(supportFragmentManager)
+                    } else {
+                        Toast.makeText(this@AppListActivity, R.string.install_permission_request, Toast.LENGTH_SHORT).show()
+                        installPermissionLauncher.launch()
+                    }
+
+                } else {
+                    Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
+                }
+
             }
 
             override fun onOpenClick(localAppData: LocalAppData, position: Int) {
                 if (CLog.isDebug()) {
                     CLog.log(logTag, "AppsListAdapter() -> onOpenClick() -> localAppData: $localAppData")
                 }
-               packageManager.getLaunchIntentForPackage(localAppData.packageName)?.let {
-                   startActivity(it)
-               }
+                packageManager.getLaunchIntentForPackage(localAppData.packageName)?.let {
+                    startActivity(it)
+                }
+            }
+
+            override fun onUpdateClick(storeAppData: StoreAppData, localAppData: LocalAppData, position: Int) {
+                if (CLog.isDebug()) {
+                    CLog.log(logTag, "AppsListAdapter() -> onUpdateClick() -> storeAppData: $storeAppData, localAppData: $localAppData")
+                }
+                if (!appInstallManager.isInstalling()) {
+                    //TODO("Implement ")
+                } else {
+                    Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
+                }
+
             }
 
         })
@@ -102,9 +136,7 @@ class AppListActivity : AppCompatActivity() {
         }
 
         observerStoreConnectionState()
-
         observerAppList()
-        observerInstallState()
         observeNetworkState()
 
     }
@@ -115,7 +147,7 @@ class AppListActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                viewModel.appsList.collect { appDatas ->
+                storeApiViewModel.appsList.collect { appDatas ->
                     if (CLog.isDebug()) {
                         CLog.log(logTag, "observerAppList() -> appDatas: $appDatas")
                     }
@@ -132,7 +164,7 @@ class AppListActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                viewModel.storeConnectionState.collect { storeConnectionState ->
+                storeApiViewModel.storeConnectionState.collect { storeConnectionState ->
                     if (CLog.isDebug()) {
                         CLog.log(logTag, "observerStoreConnectionState() -> storeConnectionState: $storeConnectionState")
                     }
@@ -148,11 +180,11 @@ class AppListActivity : AppCompatActivity() {
                             SnackProvider.provideDefaultSnack(root = binding.root, snackText = errorMessage, snackActionText = actionText, snackClickListener = object : SnackProvider.ViewClickListener {
 
                                 override fun onSnackViewClick() {
-                                    viewModel.loadAppList()
+                                    storeApiViewModel.loadAppList()
                                 }
 
                                 override fun onActionClick() {
-                                    viewModel.loadAppList()
+                                    storeApiViewModel.loadAppList()
                                 }
 
                             }).show()
@@ -179,7 +211,7 @@ class AppListActivity : AppCompatActivity() {
                         if (CLog.isDebug()) {
                             CLog.log(logTag, "networkStateFlow() -> Device is online. Call viewModel.loadAppList()")
                         }
-                        viewModel.loadAppList()
+                        storeApiViewModel.loadAppList()
                     } else {
                         askDeviceToBeMadeOnline()
                     }
@@ -189,47 +221,17 @@ class AppListActivity : AppCompatActivity() {
         }
     }
 
-    fun onInstallButtonClick() {
-        if (CLog.isDebug()) {
-            CLog.log(logTag, "onInstallButtonClick()")
-        }
-        if (!viewModel.isInstalling) {
+    private fun pickAndInstall() {
+        if (!appInstallManager.isInstalling()) {
             try {
                 pickApkLauncher.launch("application/vnd.android.package-archive")
             } catch (e: ActivityNotFoundException) {
+                Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
                 CLog.logPrintStackTrace(e)
             }
         } else {
-            Toast.makeText(this, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun observerInstallState() {
-        if (CLog.isDebug()) {
-            CLog.log(logTag, "observerInstallState()")
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                viewModel.installState.onEach { installState ->
-                    if (CLog.isDebug()) {
-                        CLog.log(logTag, "observerInstallState() -> installState: $installState")
-                    }
-                }
-            }
-        }
-
-    }
-
-
-    private fun requestPermissions() {
-        if (packageManager.canRequestPackageInstalls()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                return
-            }
-
-        }
-        installPermissionLauncher.launch()
     }
 
 
