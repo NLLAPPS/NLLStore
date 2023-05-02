@@ -1,6 +1,7 @@
 package com.nll.store.ui
 
 import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -8,6 +9,7 @@ import androidx.activity.result.launch
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -17,12 +19,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.nll.store.R
 import com.nll.store.connectivity.InternetStateProvider
 import com.nll.store.databinding.ActivityAppListBinding
+import com.nll.store.debug.DebugLogActivity
 import com.nll.store.installer.AppInstallManager
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
 import com.nll.store.model.LocalAppData
 import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
+import com.nll.store.utils.extTryStartActivity
 import io.github.solrudev.simpleinstaller.activityresult.InstallPermissionContract
 import kotlinx.coroutines.launch
 
@@ -30,7 +34,7 @@ import kotlinx.coroutines.launch
 class AppListActivity : AppCompatActivity() {
     private val logTag = "AppListActivity"
     private lateinit var binding: ActivityAppListBinding
-    private lateinit var appInstallManager : AppInstallManager
+    private lateinit var appInstallManager: AppInstallManager
     private val storeApiViewModel: StoreApiViewModel by viewModels {
         StoreApiViewModel.Factory(application)
     }
@@ -65,11 +69,20 @@ class AppListActivity : AppCompatActivity() {
         appInstallManager = AppInstallManager.getInstance(this)
 
         binding.toolbar.setOnMenuItemClickListener { item ->
-            if (item.itemId == R.id.selectApkAndInstall) {
-                pickAndInstall()
+            when (item.itemId) {
+                R.id.selectApkAndInstall -> {
+                    pickAndInstall()
+                }
+
+                R.id.openDebugLog -> {
+                    startActivity(Intent(this, DebugLogActivity::class.java))
+                }
             }
+
             true
         }
+
+
 
         appsListAdapter = AppsListAdapter(object : AppsListAdapter.CallBack {
             override fun onCardClick(data: AppData, position: Int) {
@@ -82,18 +95,25 @@ class AppListActivity : AppCompatActivity() {
                 if (CLog.isDebug()) {
                     CLog.log(logTag, "AppsListAdapter() -> onInstallClick() -> storeAppData: $storeAppData")
                 }
-                if (!appInstallManager.isInstalling()) {
+                if (storeAppData.isNLLStoreApp) {
+                    if (!appInstallManager.isInstalling()) {
 
-                    if (packageManager.canRequestPackageInstalls()) {
-                        appInstallManager.startDownload(storeAppData, null)
-                        InstallAppFragment.display(supportFragmentManager)
+                        if (packageManager.canRequestPackageInstalls()) {
+                            appInstallManager.startDownload(storeAppData, null)
+                            InstallAppFragment.display(supportFragmentManager)
+                        } else {
+                            Toast.makeText(this@AppListActivity, R.string.install_permission_request, Toast.LENGTH_SHORT).show()
+                            installPermissionLauncher.launch()
+                        }
+
                     } else {
-                        Toast.makeText(this@AppListActivity, R.string.install_permission_request, Toast.LENGTH_SHORT).show()
-                        installPermissionLauncher.launch()
+                        Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
                     }
-
                 } else {
-                    Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
+                    val openIntent = Intent(Intent.ACTION_VIEW, storeAppData.downloadUrl.toUri()).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+                    }
+                    extTryStartActivity(openIntent)
                 }
 
             }
@@ -111,12 +131,19 @@ class AppListActivity : AppCompatActivity() {
                 if (CLog.isDebug()) {
                     CLog.log(logTag, "AppsListAdapter() -> onUpdateClick() -> storeAppData: $storeAppData, localAppData: $localAppData")
                 }
-                if (!appInstallManager.isInstalling()) {
-                    //TODO("Implement ")
-                } else {
-                    Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
-                }
 
+                if (storeAppData.isNLLStoreApp) {
+                    if (!appInstallManager.isInstalling()) {
+                        //TODO("Implement ")
+                    } else {
+                        Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    val openIntent = Intent(Intent.ACTION_VIEW, storeAppData.downloadUrl.toUri()).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+                    }
+                    extTryStartActivity(openIntent)
+                }
             }
 
         })

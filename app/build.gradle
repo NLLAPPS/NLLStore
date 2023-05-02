@@ -20,6 +20,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.bundles.acraBundle)
     implementation(libs.coil)
     implementation(libs.bundles.ktorBundle)
     implementation(libs.androidx.coreKtx)
@@ -34,7 +35,9 @@ dependencies {
     implementation(libs.androidx.recyclerView)
     implementation(libs.google.materialComponents)
     implementation(libs.square.okHttp.loggingInterceptor)
+    implementation(libs.androidx.lifecycle.service)
+
     ksp(libs.androidx.room.compiler)
     implementation project(":simpleinstaller")
-
+    implementation project(":notify")
 }

@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.widget.Toast
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
 import androidx.core.content.getSystemService
 import com.nll.store.log.CLog
 
@@ -25,5 +27,14 @@ fun Context.extTryStartActivity(intent: Intent, errorMessage: String? = null) {
             Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
         }
         CLog.logPrintStackTrace(e)
+    }
+}
+@ColorInt
+fun Context.extGetThemeAttrColor(@AttrRes colorAttr: Int): Int {
+    val array = obtainStyledAttributes(null, intArrayOf(colorAttr))
+    return try {
+        array.getColor(0, 0)
+    } finally {
+        array.recycle()
     }
 }

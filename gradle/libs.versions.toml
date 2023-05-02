@@ -55,6 +55,7 @@ kotlinXserializationJsonVersion = "1.5.0" # https://github.com/Kotlin/kotlinx.se
 retrofitVersion ="2.9.0"
 ktorVersion = "2.2.4" # https://ktor.io/
 
+
 [libraries]
 acra-core = { module = "ch.acra:acra-core", version.ref = "acraVersion" }
 acra-mail = { module = "ch.acra:acra-mail", version.ref = "acraVersion" }
@@ -106,6 +107,7 @@ ktor-Logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorVers
 ktor-Auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktorVersion" }
 ktor-Content-Negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorVersion" }
 ktor-Serialization-Json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorVersion" }# Open AI Whisper
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradleVersion" }

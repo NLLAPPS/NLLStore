@@ -6,4 +6,9 @@
         android:icon="@drawable/ic_install"
         android:title="@string/manual_install" />
 
+    <item
+        android:id="@+id/openDebugLog"
+        android:icon="@drawable/ic_android_black"
+        android:title="@string/debug_log" />
+
 </menu>

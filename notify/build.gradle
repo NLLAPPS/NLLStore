@@ -1,0 +1,14 @@
+apply from: "$rootProject.projectDir/commonSettingsLibs.gradle"
+apply from: "$rootProject.projectDir/commonSettingsAll.gradle"
+
+android {
+      namespace "io.karn.notify"
+    defaultConfig {
+        consumerProguardFiles 'proguard-rules.pro'
+    }
+
+}
+
+dependencies {
+    implementation(libs.androidx.coreKtx)
+}

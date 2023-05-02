@@ -1,6 +1,7 @@
 <resources>
-
+    <string name="dots" translatable="false">…</string>
     <string name="app_name" translatable="false">NLL Store</string>
+
     <string name="ongoing_installation">Please wait ongoing installation to finish</string>
     <string name="app_icon">App icon</string>
     <string name="internet_conn_required">Internet connection required</string>
@@ -12,12 +13,10 @@
     <string name="update">Update</string>
     <string name="downloading">Downloading</string>
     <string name="downloaded">Downloaded</string>
-    <string name="dots" translatable="false">…</string>
     <string name="permission_denied">Permission denied</string>
     <string name="install_permission_request">Please grant app install permission</string>
     <string name="install_permission_granted">Tap on install to continue installation</string>
-    <string name="manual_install">Select &amp; install</string>
-    <string name="intent_handle_fail">Select &amp; install</string>
+    <string name="manual_install">Install APK</string>
     <string name="installing">Installing</string>
     <string name="download_manually">Download failed! Try downloading manually and then use menu above to install again</string>
     <string name="download">Download</string>
@@ -33,4 +32,17 @@
     <string name="install_error_incompatible">The operation failed because it is fundamentally incompatible with this device. For example, the app may require a hardware feature that doesn\'t exist, it may be missing native code for the ABIs supported by the device, or it requires a newer SDK version, etc.</string>
     <string name="install_error_invalid">The operation failed because one or more of the APKs was invalid. For example, they might be malformed, corrupt, incorrectly signed, mismatched, etc.</string>
     <string name="install_error_storage">The operation failed because of storage issues. For example, the device may be running low on space, or external media may be unavailable. The user may be able to help free space or insert different external media</string>
+    <string name="debug_log">Debug log</string>
+    <string name="debug_log_dumped">Debug logs dumped to %1$s</string>
+    <string name="share">Share</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="clear">Clear</string>
+    <string name="send">Send</string>
+    <string name="crash_notif_title">NLL Store has crashed</string>
+    <string name="crash_dialog_text">There was an error causing APH to crash and stop.\nPlease help us fix this by sending us error data, all you have to is tap \'OK\' and send this report by email.</string>
+    <string name="permission_all_required">All permissions are required for full functionality</string>
+    <string name="permissions_title">Permission Request</string>
+    <string name="cancel">Cancel</string>
+    <string name="app_crash_notification_channel">Crash notification</string>
 </resources>

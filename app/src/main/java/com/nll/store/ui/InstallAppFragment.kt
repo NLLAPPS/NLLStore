@@ -1,7 +1,6 @@
 package com.nll.store.ui
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -19,6 +18,7 @@ import com.nll.store.databinding.FragmentAppInstallerBinding
 import com.nll.store.installer.AppInstallManager
 import com.nll.store.log.CLog
 import com.nll.store.utils.extHumanReadableByteCount
+import com.nll.store.utils.extTryStartActivity
 import io.github.solrudev.simpleinstaller.data.InstallFailureCause
 import io.github.solrudev.simpleinstaller.data.InstallResult
 import kotlinx.coroutines.launch
@@ -98,7 +98,11 @@ class InstallAppFragment : DialogFragment() {
                             {
                                 setMessage(R.string.download_manually)
                                 setPositiveButton(R.string.download) { _, _ ->
-                                    startManualDownload(installState.storeAppData.downloadUrl.toUri())
+                                    val openIntent = Intent(Intent.ACTION_VIEW, installState.storeAppData.downloadUrl.toUri()).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+                                    }
+                                    startActivity(openIntent)
+                                    requireContext().extTryStartActivity(openIntent)
                                 }
                                 show()
                             }
@@ -197,23 +201,6 @@ class InstallAppFragment : DialogFragment() {
 
     }
 
-    private fun startManualDownload(downloadUrl: Uri) {
-        try {
-            /**
-             * TODO Do we need FLAG_ACTIVITY_NEW_DOCUMENT
-             * An activity that handles documents can use this attribute so that with every document you open you launch a separate instance of the same activity.
-             * If you check your recent apps, then you will see various screens of the same activity of your app, each using a different document.
-             */
-            val openIntent = Intent(Intent.ACTION_VIEW, downloadUrl).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
-            }
-            startActivity(openIntent)
-        } catch (e: Exception) {
-            CLog.logPrintStackTrace(e)
-            Toast.makeText(requireContext(), R.string.no_url_handle, Toast.LENGTH_LONG).show()
-        }
-
-    }
 
     companion object {
 

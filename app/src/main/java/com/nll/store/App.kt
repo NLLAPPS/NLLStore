@@ -13,6 +13,12 @@ import com.nll.store.log.CLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import org.acra.ReportField
+import org.acra.config.dialog
+import org.acra.config.mailSender
+import org.acra.config.notification
+import org.acra.data.StringFormat
+import org.acra.ktx.initAcra
 import java.util.concurrent.Executors
 
 
@@ -21,7 +27,7 @@ class App : Application(), ImageLoaderFactory {
         private const val logTag = "App"
         lateinit var INSTANCE: App private set
         val applicationScope: CoroutineScope by lazy { CoroutineScope(Dispatchers.Main + SupervisorJob()) }
-
+        val contactEmail = "cb@nllapps.com"
     }
 
 
@@ -47,12 +53,11 @@ class App : Application(), ImageLoaderFactory {
     }
 
 
-
     private fun initACRA() {
         if (CLog.isDebug()) {
             CLog.log(logTag, "initACRA()")
         }
-        /* try {
+         try {
              initAcra {
 
                  buildConfigClass = BuildConfig::class.java
@@ -72,19 +77,26 @@ class App : Application(), ImageLoaderFactory {
                  )
 
                  mailSender {
-                     mailTo = StoreConfigImpl.getStoreContactEmail()
+                     mailTo = contactEmail
                      reportAsFile = false
                  }
 
                  notification {
-                     title = getString(AppResources.string.crash_notif_title)
-                     text = getString(AppResources.string.crash_dialog_text)
-                     channelName = getString(AppResources.string.app_crash_notification_channel)
-                     sendButtonText = getString(AppResources.string.send)
-                     discardButtonText = getString(AppResources.string.cancel)
+                     title = getString(R.string.crash_notif_title)
+                     text = getString(R.string.crash_dialog_text)
+                     channelName = getString(R.string.app_crash_notification_channel)
+                     sendButtonText = getString(R.string.send)
+                     discardButtonText = getString(R.string.cancel)
                      sendOnClick = true
-                     resDiscardButtonIcon = AppResources.drawable.crash_log_discard
-                     resSendButtonIcon = AppResources.drawable.crash_log_send
+                     resDiscardButtonIcon = R.drawable.crash_log_discard
+                     resSendButtonIcon = R.drawable.crash_log_send
+                 }
+
+                 //Notification may not work, also use dialog for now. See https://github.com/ACRA/acra/issues/1146
+                 dialog {
+                     title = getString(R.string.crash_notif_title)
+                     text = getString(R.string.crash_dialog_text)
+
                  }
              }
 
@@ -92,7 +104,7 @@ class App : Application(), ImageLoaderFactory {
          } catch (e: Exception) {
              //Already called. Ignore. It seems to be called more than once on rare occasions
              CLog.logPrintStackTrace(e)
-         }*/
+         }
     }
 
     override fun newImageLoader() = ImageLoader.Builder(this)
