@@ -37,3 +37,4 @@
 # to my proguard files
 # Without that line it ket crashing at payload.bubblize at NotificationInterop.kt
 -keep class io.karn.notify.entities.*
+-dontwarn java.lang.invoke.StringConcatFactory

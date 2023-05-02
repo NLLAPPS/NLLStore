@@ -17,6 +17,22 @@ android {
         }
     }
 
+    applicationVariants.configureEach { variant ->
+        variant.outputs.configureEach { output ->
+            output.outputFileName = "nll-store.apk"
+        }
+
+
+        if (!buildType.debuggable) {
+            assembleProvider.get().doLast {
+                mappingFileProvider.get().files.forEach { proguardFile ->
+                    def newFile = new File("${rootDir}/proguard-mappings/${versionCode}.txt")
+                    project.logger.lifecycle("Project app applicationVariants proguardFile from ${proguardFile} to ${newFile.absolutePath}")
+                    proguardFile.renameTo(newFile)
+                }
+            }
+        }
+    }
 }
 
 dependencies {

@@ -16,7 +16,6 @@
     <string name="permission_denied">Permission denied</string>
     <string name="install_permission_request">Please grant app install permission</string>
     <string name="install_permission_granted">Tap on install to continue installation</string>
-    <string name="manual_install">Install APK</string>
     <string name="installing">Installing</string>
     <string name="download_manually">Download failed! Try downloading manually and then use menu above to install again</string>
     <string name="download">Download</string>
@@ -32,6 +31,8 @@
     <string name="install_error_incompatible">The operation failed because it is fundamentally incompatible with this device. For example, the app may require a hardware feature that doesn\'t exist, it may be missing native code for the ABIs supported by the device, or it requires a newer SDK version, etc.</string>
     <string name="install_error_invalid">The operation failed because one or more of the APKs was invalid. For example, they might be malformed, corrupt, incorrectly signed, mismatched, etc.</string>
     <string name="install_error_storage">The operation failed because of storage issues. For example, the device may be running low on space, or external media may be unavailable. The user may be able to help free space or insert different external media</string>
+    <string name="install_error_unknown_or_user_cancelled">Installation cancelled</string>
+
     <string name="debug_log">Debug log</string>
     <string name="debug_log_dumped">Debug logs dumped to %1$s</string>
     <string name="share">Share</string>

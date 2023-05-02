@@ -152,36 +152,27 @@ class InstallAppFragment : DialogFragment() {
                                         is InstallFailureCause.Incompatible -> getString(R.string.install_error_incompatible)
                                         is InstallFailureCause.Invalid -> getString(R.string.install_error_invalid)
                                         is InstallFailureCause.Storage -> getString(R.string.install_error_storage)
-                                        null -> getString(R.string.unknown_error)
+                                        null -> getString(R.string.install_error_unknown_or_user_cancelled)
                                     }
                                     with(MaterialAlertDialogBuilder(requireContext()))
                                     {
                                         setTitle(R.string.install_error)
                                         setMessage(message)
-                                        setPositiveButton(R.string.ok) { _, _ ->
-                                            dismiss()
-                                        }
+                                        setPositiveButton(R.string.ok, null)
                                         show()
                                     }
 
-                                    Toast.makeText(requireContext(), installState.installResult.cause?.message, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
 
                         is AppInstallManager.State.Install.Progress -> {
                             binding.installDownloadedAppButton.isEnabled = false
-
-                            //TODO()
-
-
                         }
 
                         AppInstallManager.State.Install.Started -> {
                             binding.installDownloadedAppButton.isEnabled = false
-
-                            //TODO()
-
 
                         }
 

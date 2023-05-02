@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:menu="@menu/main_activity_menu"
+            app:menu="@menu/app_list_activity_menu"
             app:title="@string/app_name" />
 
         <com.google.android.material.progressindicator.LinearProgressIndicator
