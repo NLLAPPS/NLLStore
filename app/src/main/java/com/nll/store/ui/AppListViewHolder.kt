@@ -18,6 +18,8 @@ class AppListViewHolder(private val binding: RowAppItemBinding) : RecyclerView.V
             callback.onCardClick(data, position)
         }
 
+        //Do not allow clicking on action button if this is actual NLL Store app and does not need updating
+        binding.appActionButton.isEnabled =  data.canBeUpdated() || !data.isSelf()
         binding.appActionButton.setOnClickListener {
 
             when (data.appInstallState) {

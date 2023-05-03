@@ -1,6 +1,8 @@
 package com.nll.store.model
 
+
 import android.widget.ImageView
+import com.nll.store.BuildConfig
 
 data class AppData(val storeAppData: StoreAppData, val appInstallState: AppInstallState) {
 
@@ -21,4 +23,6 @@ data class AppData(val storeAppData: StoreAppData, val appInstallState: AppInsta
         AppInstallState.NotInstalled -> false
 
     }
+
+    fun isSelf() = storeAppData.packageName == BuildConfig.APPLICATION_ID
 }

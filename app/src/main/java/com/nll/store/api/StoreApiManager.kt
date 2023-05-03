@@ -101,8 +101,6 @@ class StoreApiManager private constructor(private val applicationContext: Contex
 
 
     private fun getInstalledAppsList() = applicationContext.packageManager.getInstalledApplicationsCompat(0)
-        //Exclude ourselves
-        .filter { it.packageName != applicationContext.packageName }
         .filter { it.packageName.startsWith(nllPackages) }
         .map {
             val icon = applicationContext.packageManager.getApplicationIcon(it)
