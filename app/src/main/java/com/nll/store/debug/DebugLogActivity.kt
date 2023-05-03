@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
@@ -28,6 +29,7 @@ class DebugLogActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDebugLogBinding
     private var logList: MutableList<String> = ArrayList()
     private var logAdapter: ArrayAdapter<String>? = null
+    private var notificationPermissionDenyCount = 0
     private val postNotificationPermission = activityResultRegistry.register("notification", ActivityResultContracts.RequestPermission()) { hasNotificationPermission ->
         if (hasNotificationPermission) {
             DebugLogService.startLogging(this)
@@ -124,6 +126,18 @@ class DebugLogActivity : AppCompatActivity() {
         binding.startButton.setOnClickListener {
             if (ApiLevel.isTPlus() && !hasNotificationPermission()) {
                 postNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                Toast.makeText(this, R.string.notification_permission_required, Toast.LENGTH_SHORT).show()
+
+                notificationPermissionDenyCount++
+                if (notificationPermissionDenyCount > 2) {
+
+                    //Open notification settings
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+                    }.let(::startActivity)
+
+                }
             } else {
                 DebugLogService.startLogging(this)
             }

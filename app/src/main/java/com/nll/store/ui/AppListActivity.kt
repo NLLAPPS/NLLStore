@@ -1,12 +1,13 @@
 package com.nll.store.ui
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -17,15 +18,18 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.nll.store.R
+import com.nll.store.api.StoreApiManager
 import com.nll.store.connectivity.InternetStateProvider
 import com.nll.store.databinding.ActivityAppListBinding
 import com.nll.store.debug.DebugLogActivity
+import com.nll.store.debug.DebugLogService
 import com.nll.store.installer.AppInstallManager
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
 import com.nll.store.model.LocalAppData
 import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
+import com.nll.store.utils.ApiLevel
 import com.nll.store.utils.extTryStartActivity
 import io.github.solrudev.simpleinstaller.activityresult.InstallPermissionContract
 import kotlinx.coroutines.launch
@@ -35,11 +39,8 @@ class AppListActivity : AppCompatActivity() {
     private val logTag = "AppListActivity"
     private lateinit var binding: ActivityAppListBinding
     private lateinit var appInstallManager: AppInstallManager
-    private val storeApiViewModel: StoreApiViewModel by viewModels {
-        StoreApiViewModel.Factory(application)
-    }
+    private lateinit var storeApiManager: StoreApiManager
     private lateinit var appsListAdapter: AppsListAdapter
-
     private val installPermissionLauncher = registerForActivityResult(InstallPermissionContract()) { isGranted ->
         if (CLog.isDebug()) {
             CLog.log(logTag, "installPermissionLauncher() -> isGranted: $isGranted")
@@ -54,6 +55,12 @@ class AppListActivity : AppCompatActivity() {
 
     }
 
+    private val postNotificationPermission = activityResultRegistry.register("notification", ActivityResultContracts.RequestPermission()) { hasNotificationPermission ->
+        if (hasNotificationPermission) {
+            DebugLogService.startLogging(this)
+        }
+    }
+
 
     private val pickApkLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
@@ -66,6 +73,7 @@ class AppListActivity : AppCompatActivity() {
         binding = ActivityAppListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        storeApiManager = StoreApiManager.getInstance(this)
         appInstallManager = AppInstallManager.getInstance(this)
 
         binding.toolbar.setOnMenuItemClickListener { item ->
@@ -99,6 +107,11 @@ class AppListActivity : AppCompatActivity() {
                     if (!appInstallManager.isInstalling()) {
 
                         if (packageManager.canRequestPackageInstalls()) {
+
+                            if (ApiLevel.isTPlus() && !hasNotificationPermission()) {
+                                postNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+
                             appInstallManager.startDownload(storeAppData, null)
                             InstallAppFragment.display(supportFragmentManager)
                         } else {
@@ -134,7 +147,8 @@ class AppListActivity : AppCompatActivity() {
 
                 if (storeAppData.isNLLStoreApp) {
                     if (!appInstallManager.isInstalling()) {
-                        //TODO("Implement ")
+                        appInstallManager.startDownload(storeAppData, localAppData)
+                        InstallAppFragment.display(supportFragmentManager)
                     } else {
                         Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
                     }
@@ -174,7 +188,7 @@ class AppListActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                storeApiViewModel.appsList.collect { appDatas ->
+                storeApiManager.observeAppList().collect { appDatas ->
                     if (CLog.isDebug()) {
                         CLog.log(logTag, "observerAppList() -> appDatas: $appDatas")
                     }
@@ -191,7 +205,7 @@ class AppListActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                storeApiViewModel.storeConnectionState.collect { storeConnectionState ->
+                storeApiManager.observeStoreConnectionState().collect { storeConnectionState ->
                     if (CLog.isDebug()) {
                         CLog.log(logTag, "observerStoreConnectionState() -> storeConnectionState: $storeConnectionState")
                     }
@@ -207,11 +221,11 @@ class AppListActivity : AppCompatActivity() {
                             SnackProvider.provideDefaultSnack(root = binding.root, snackText = errorMessage, snackActionText = actionText, snackClickListener = object : SnackProvider.ViewClickListener {
 
                                 override fun onSnackViewClick() {
-                                    storeApiViewModel.loadAppList()
+                                    storeApiManager.loadAppList()
                                 }
 
                                 override fun onActionClick() {
-                                    storeApiViewModel.loadAppList()
+                                    storeApiManager.loadAppList()
                                 }
 
                             }).show()
@@ -238,7 +252,7 @@ class AppListActivity : AppCompatActivity() {
                         if (CLog.isDebug()) {
                             CLog.log(logTag, "networkStateFlow() -> Device is online. Call viewModel.loadAppList()")
                         }
-                        storeApiViewModel.loadAppList()
+                        storeApiManager.loadAppList()
                     } else {
                         askDeviceToBeMadeOnline()
                     }
@@ -270,4 +284,9 @@ class AppListActivity : AppCompatActivity() {
         InternetStateProvider.openQuickInterNetConnectivityMenuIfYouCan(this)
     }
 
+    private fun hasNotificationPermission() = if (ApiLevel.isTPlus()) {
+        ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    } else {
+        true
+    }
 }

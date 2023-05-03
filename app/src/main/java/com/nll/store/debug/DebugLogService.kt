@@ -1,6 +1,7 @@
 package com.nll.store.debug
 
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
@@ -63,7 +64,7 @@ class DebugLogService : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
+        CLog.enableDebug(this)
         val debugLogIntent = Intent(this, DebugLogActivity::class.java)
         debugLogIntent.action = "android.intent.action.MAIN"
         debugLogIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -113,7 +114,7 @@ class DebugLogService : LifecycleService() {
         CLog.disableDebug()
         clearLogStorage()
         sendServiceMessage(DebugLogServiceMessage.Stopped)
-        stopForeground(true)
+        stopForeground(Service.STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 

@@ -27,7 +27,6 @@ buildscript {
 
 plugins {
     alias(libs.plugins.kotlin.ksp)
-    alias(libs.plugins.banes.versions)
     alias(libs.plugins.kotlin.android) apply(false)
     alias(libs.plugins.kotlin.serialization) apply(false)
 

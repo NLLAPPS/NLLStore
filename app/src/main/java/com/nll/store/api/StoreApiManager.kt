@@ -1,21 +1,22 @@
-package com.nll.store.ui
+package com.nll.store.api
 
-import android.app.Application
+import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import com.nll.store.api.ApiException
-import com.nll.store.api.NLLStoreApi
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
 import com.nll.store.model.AppInstallState
 import com.nll.store.model.LocalAppData
 import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
+import com.nll.store.update.UpdateNotification
+import com.nll.store.utils.ApiLevel
+import com.nll.store.utils.CoroutineScopeFactory
 import com.nll.store.utils.PackageReceiver
+import com.nll.store.utils.SingletonHolder
 import com.nll.store.utils.getInstalledApplicationsCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,22 +24,27 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
-class StoreApiViewModel(private val app: Application) : AndroidViewModel(app) {
-    private val logTag = "StoreApiViewModel"
+class StoreApiManager private constructor(private val applicationContext: Context) {
+    private val logTag = "StoreApiManager"
+    private val iOScope by lazy { CoroutineScopeFactory.create(Dispatchers.IO) }
     private val nllPackages = "com.nll."
     private val nllStoreApi = NLLStoreApi()
     private val _appsList = MutableStateFlow(listOf<AppData>())
-    val appsList = _appsList.asStateFlow()
     private val _storeConnectionState = MutableStateFlow<StoreConnectionState>(StoreConnectionState.Connected)
-    val storeConnectionState = _storeConnectionState.asStateFlow()
     private var lastStoreAppListLoadTime = 0L
     private var storeAppList: List<StoreAppData> = listOf()
 
+    companion object : SingletonHolder<StoreApiManager, Context>({
+        StoreApiManager(it.applicationContext)
+    })
 
     init {
         registerPackageReceiver()
     }
 
+
+    fun observeAppList() = _appsList.asStateFlow()
+    fun observeStoreConnectionState() = _storeConnectionState.asStateFlow()
     fun loadAppList() {
 
         //Rate limit remote connectivity
@@ -49,7 +55,7 @@ class StoreApiViewModel(private val app: Application) : AndroidViewModel(app) {
 
         _storeConnectionState.value = StoreConnectionState.Connecting
 
-        viewModelScope.launch(Dispatchers.IO) {
+        iOScope.launch {
             val localAppList = try {
                 getInstalledAppsList()
             } catch (e: Exception) {
@@ -94,24 +100,23 @@ class StoreApiViewModel(private val app: Application) : AndroidViewModel(app) {
     }
 
 
-    private fun getInstalledAppsList() = app.packageManager.getInstalledApplicationsCompat(0)
+    private fun getInstalledAppsList() = applicationContext.packageManager.getInstalledApplicationsCompat(0)
         //Exclude ourselves
-        .filter { it.packageName != app.packageName }
+        .filter { it.packageName != applicationContext.packageName }
         .filter { it.packageName.startsWith(nllPackages) }
         .map {
-            val icon = app.packageManager.getApplicationIcon(it)
-            val appName = app.packageManager.getApplicationLabel(it) as String
+            val icon = applicationContext.packageManager.getApplicationIcon(it)
+            val appName = applicationContext.packageManager.getApplicationLabel(it) as String
             val packageName = it.packageName
             /*
                Be careful when replacing deprecated method below with something like PackageManager.PackageInfoFlags.of(PackageManager.GET_INSTRUMENTATION)
                getPackageInfo(packageName, 0) returns all info. We need to make sure new method would return all the info we use
                for example, we need firstInstallTime. Which PackageManager.GET_.. returns it?
             */
-            val versionCode = app.packageManager.getPackageInfo(packageName, 0).longVersionCode
+            val versionCode = applicationContext.packageManager.getPackageInfo(packageName, 0).longVersionCode
             LocalAppData(packageName.hashCode(), icon, appName, packageName, versionCode)
         }
         .sortedBy { it.name }
-
 
     private fun registerPackageReceiver() {
         if (CLog.isDebug()) {
@@ -127,7 +132,7 @@ class StoreApiViewModel(private val app: Application) : AndroidViewModel(app) {
             addDataScheme("package")
         }
 
-        app.registerReceiver(PackageReceiver { packageName ->
+        applicationContext.registerReceiver(PackageReceiver { packageName ->
             if (CLog.isDebug()) {
                 CLog.log(logTag, "registerPackageReceiver() -> callback() -> packageName: $packageName")
             }
@@ -135,11 +140,33 @@ class StoreApiViewModel(private val app: Application) : AndroidViewModel(app) {
         }, pkgFilter)
     }
 
-
-    @Suppress("UNCHECKED_CAST")
-    class Factory(private val app: Application) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return StoreApiViewModel(app) as T
+    fun checkUpdates() {
+        if (CLog.isDebug()) {
+            CLog.log(logTag, "checkUpdates()")
         }
+
+        if (hasNotificationPermission()) {
+            //Update app list cache
+            loadAppList()
+            //Check for updates
+            val postUpdateNotification = _appsList.value.any { it.canBeUpdated() }
+            if (CLog.isDebug()) {
+                CLog.log(logTag, "checkUpdates() -> postUpdateNotification: $postUpdateNotification")
+            }
+            if(postUpdateNotification){
+                UpdateNotification.postUpdateNotification(applicationContext)
+            }
+        } else {
+            if (CLog.isDebug()) {
+                CLog.log(logTag, "checkUpdates() -> We do not have notification permission. Skipping update check")
+            }
+        }
+
+    }
+
+    private fun hasNotificationPermission() = if (ApiLevel.isTPlus()) {
+        ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    } else {
+        true
     }
 }

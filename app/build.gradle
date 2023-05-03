@@ -43,17 +43,13 @@ dependencies {
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.activity)
     implementation(libs.bundles.acraBundle)
-    implementation(libs.androidx.lifecycle.viewModelKtx)
-    implementation(libs.androidx.lifecycle.liveDataKtx)
     implementation(libs.androidx.constraintLayout)
     implementation(libs.androidx.fragment)
-    implementation(libs.bundles.roomBundle)
     implementation(libs.androidx.recyclerView)
     implementation(libs.google.materialComponents)
     implementation(libs.square.okHttp.loggingInterceptor)
     implementation(libs.androidx.lifecycle.service)
-
-    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.workManagerRuntimeKtx)
     implementation project(":simpleinstaller")
     implementation project(":notify")
 }

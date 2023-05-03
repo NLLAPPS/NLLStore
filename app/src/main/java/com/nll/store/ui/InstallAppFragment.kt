@@ -179,7 +179,7 @@ class InstallAppFragment : DialogFragment() {
                         null -> {
 
 
-                            //TODO()
+                           //Unused
 
 
                         }

@@ -10,6 +10,7 @@ import coil.request.CachePolicy
 import coil.util.DebugLogger
 import com.nll.store.connectivity.InternetStateProvider
 import com.nll.store.log.CLog
+import com.nll.store.update.PeriodicUpdateCheckWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -50,6 +51,7 @@ class App : Application(), ImageLoaderFactory {
         INSTANCE = this
         initACRA()
         InternetStateProvider.start(this)
+        PeriodicUpdateCheckWorker.enqueueUpdateCheck(this)
     }
 
 

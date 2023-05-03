@@ -36,35 +36,35 @@ class AppInstallManager private constructor(private val applicationContext: Cont
     private val packageInstallerCallback = object : PackageInstaller.Callback {
         override fun onCanceled() {
             if (CLog.isDebug()) {
-                CLog.log(logTag, "installPackage() -> onCanceled()")
+                CLog.log(logTag, "packageInstallerCallback -> onCanceled()")
             }
             _installState.value = State.Install.Completed(InstallResult.Failure(InstallFailureCause.Generic("Cancelled")))
         }
 
         override fun onException(exception: Throwable) {
             if (CLog.isDebug()) {
-                CLog.log(logTag, "installPackage() -> onException() -> exception: $exception")
+                CLog.log(logTag, "packageInstallerCallback -> onException() -> exception: $exception")
             }
             _installState.value = State.Install.Completed(InstallResult.Failure(InstallFailureCause.Aborted(exception.message)))
         }
 
         override fun onFailure(cause: InstallFailureCause?) {
             if (CLog.isDebug()) {
-                CLog.log(logTag, "installPackage() -> onFailure() -> cause: $cause")
+                CLog.log(logTag, "packageInstallerCallback -> onFailure() -> cause: $cause")
             }
             _installState.value = State.Install.Completed(InstallResult.Failure(cause))
         }
 
         override fun onProgressChanged(progress: ProgressData) {
             if (CLog.isDebug()) {
-                CLog.log(logTag, "installPackage() -> onProgressChanged() -> progress: $progress")
+                CLog.log(logTag, "packageInstallerCallback -> onProgressChanged() -> progress: $progress")
             }
             _installState.value = State.Install.Progress(progress)
         }
 
         override fun onSuccess() {
             if (CLog.isDebug()) {
-                CLog.log(logTag, "installPackage() -> onSuccess() ")
+                CLog.log(logTag, "packageInstallerCallback -> onSuccess() ")
             }
             _installState.value = State.Install.Completed(InstallResult.Success)
         }
@@ -82,7 +82,7 @@ class AppInstallManager private constructor(private val applicationContext: Cont
 
 
     private fun getSessionOptions() = SessionOptions {
-        //TODO pass setWhitelistedRestrictedPermissions() as sessionoption
+        //TODO pass setWhitelistedRestrictedPermissions() as sessionoption?
         setConfirmationStrategy(ConfirmationStrategy.IMMEDIATE)
         notification {
             icon = R.drawable.ic_install
@@ -91,7 +91,7 @@ class AppInstallManager private constructor(private val applicationContext: Cont
 
     fun install(uri: Uri) {
         if (CLog.isDebug()) {
-            CLog.log(logTag, "installPackage() -> uri: $uri")
+            CLog.log(logTag, "install() -> uri: $uri")
         }
         installJob = iOScope.launch {
             packageInstaller.installPackage(UriApkSource(uri), getSessionOptions(), packageInstallerCallback)
@@ -101,7 +101,7 @@ class AppInstallManager private constructor(private val applicationContext: Cont
 
     fun install(file: File) {
         if (CLog.isDebug()) {
-            CLog.log(logTag, "installPackage() -> file: $file")
+            CLog.log(logTag, "install() -> file: $file")
         }
 
         installJob = iOScope.launch {
@@ -111,8 +111,12 @@ class AppInstallManager private constructor(private val applicationContext: Cont
     }
 
     fun startDownload(storeAppData: StoreAppData, localAppData: LocalAppData?) {
+        if (CLog.isDebug()) {
+            CLog.log(logTag, "startDownload() -> storeAppData: $storeAppData, localAppData: $localAppData")
+        }
         iOScope.launch {
             val targetFile = FileDownloader.getDestinationFile(applicationContext, storeAppData)
+
             val shouldDownload = if (targetFile.exists()) {
 
                 /**
@@ -121,28 +125,43 @@ class AppInstallManager private constructor(private val applicationContext: Cont
                  * Imagine a previously downloaded file being invalid and new version info being published.
                  * We must make sure we ignore invalid files
                  */
-                val downloadedApkPackageInfo = targetFile.getPackageInfoFromApk(applicationContext)
-                if (downloadedApkPackageInfo != null) {
+                val downloadedApk = targetFile.getPackageInfoFromApk(applicationContext)
+                if (downloadedApk != null) {
                     if (CLog.isDebug()) {
-                        CLog.log(logTag, "download() -> downloadedApkVersion: ${downloadedApkPackageInfo.longVersionCode}, storeAppData.version: ${localAppData?.versionCode}")
+                        CLog.log(logTag, "startDownload() -> downloadedApk.longVersionCode: ${downloadedApk.longVersionCode}, storeAppData.version: ${localAppData?.versionCode}")
                     }
                     if (localAppData == null) {
                         if (CLog.isDebug()) {
-                            CLog.log(logTag, "download() -> We have a downloaded file and no installed version. No need to download")
+                            CLog.log(logTag, "startDownload() -> We have a downloaded file and no installed version. No need to download")
                         }
-                        _installState.value = State.Download.Completed(storeAppData, targetFile, downloadedApkPackageInfo)
+                        _installState.value = State.Download.Completed(storeAppData, targetFile, downloadedApk)
                         false
                     } else {
-                        val isNewOrSameVersion = downloadedApkPackageInfo.longVersionCode >= localAppData.versionCode
+
+                        //Check if downloaded apk's version is equals or higher than current installed version.
+                        val isNewOrSameVersion = downloadedApk.longVersionCode >= localAppData.versionCode
+                        //Check if downloaded apk's version is smaller than store version
+                        val forceDownload = downloadedApk.longVersionCode<storeAppData.version
+
+                        if (CLog.isDebug()) {
+                            CLog.log(logTag, "startDownload() -> isNewOrSameVersion: $isNewOrSameVersion, forceDownload: $forceDownload")
+                        }
                         if (isNewOrSameVersion) {
-                            if (CLog.isDebug()) {
-                                CLog.log(logTag, "download() -> We have a downloaded file with same or new version of installed version. No need to download")
+                            if(forceDownload){
+                                if (CLog.isDebug()) {
+                                    CLog.log(logTag, "startDownload() -> We have a downloaded file with same or new version of installed version but its version is smaller than store version. Force downloading")
+                                }
+                               true
+                            }else {
+                                if (CLog.isDebug()) {
+                                    CLog.log(logTag, "startDownload() -> We have a downloaded file with same or new version of installed version. No need to download. Updating state to Completed")
+                                }
+                                _installState.value = State.Download.Completed(storeAppData, targetFile, downloadedApk)
+                                false
                             }
-                            _installState.value = State.Download.Completed(storeAppData, targetFile, downloadedApkPackageInfo)
-                            false
                         } else {
                             if (CLog.isDebug()) {
-                                CLog.log(logTag, "download() -> We have a downloaded file but it is NOT same or new version as requested. Allow download")
+                                CLog.log(logTag, "startDownload() -> We have a downloaded file but it is NOT same or new version as requested. Allow download")
                             }
                             true
                         }
@@ -150,23 +169,26 @@ class AppInstallManager private constructor(private val applicationContext: Cont
 
                 } else {
                     if (CLog.isDebug()) {
-                        CLog.log(logTag, "download() -> We have a download file but it is corrupt. Allow download")
+                        CLog.log(logTag, "startDownload() -> We have a download file but it is corrupt. Allow download")
                     }
                     true
                 }
             } else {
                 if (CLog.isDebug()) {
-                    CLog.log(logTag, "download() -> We have no file. Allow download")
+                    CLog.log(logTag, "startDownload() -> We have no file. Allow download")
                 }
                 true
             }
 
+            if (CLog.isDebug()) {
+                CLog.log(logTag, "startDownload() -> shouldDownload: $shouldDownload, targetFile: ${targetFile.absolutePath}")
+            }
 
             if (shouldDownload) {
 
                 FileDownloader().download(applicationContext, storeAppData, targetFile) { downloadState ->
                     if (CLog.isDebug()) {
-                        CLog.log(logTag, "download() -> downloadState: $downloadState")
+                        CLog.log(logTag, "startDownload() -> downloadState: $downloadState")
                     }
                     _installState.value = downloadState
                 }
