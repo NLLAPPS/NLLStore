@@ -17,14 +17,13 @@ import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
-object Client {
-    private const val logTag = "Client"
-    private const val apiUrl = "https://acr.app/store/api/"
+object ApiClient {
+    private const val logTag = "ApiClient"
     private val timeoutConfig = Timeout(request = 30.seconds, connect = 30.seconds, socket = 30.seconds)
     private val retryStrategy = RetryStrategy()
     private val headerParams: Map<String, String> = emptyMap()
     private val queryParams: Map<String, String> = emptyMap()
-    internal fun createHttpClient() = HttpClient {
+    internal fun createHttpClient(apiUrl: String) = HttpClient {
 
         install(ContentNegotiation) {
             register(

@@ -15,7 +15,6 @@ import com.nll.store.model.StoreConnectionState
 import com.nll.store.update.UpdateNotification
 import com.nll.store.utils.ApiLevel
 import com.nll.store.utils.CoroutineScopeFactory
-import com.nll.store.utils.PackageReceiver
 import com.nll.store.utils.SingletonHolder
 import com.nll.store.utils.getInstalledApplicationsCompat
 import kotlinx.coroutines.Dispatchers

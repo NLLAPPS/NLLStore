@@ -1,4 +1,4 @@
-package com.nll.store.utils
+package com.nll.store.api
 
 import android.content.BroadcastReceiver
 import android.content.Context

@@ -7,7 +7,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 class NLLStoreApi() {
-    private val transport = HttpTransport(Client.createHttpClient())
+    private val apiUrl = "https://nllapps.com/store/api/"
+    private val transport = HttpTransport(ApiClient.createHttpClient(apiUrl))
     suspend fun getStoreAppList(): List<StoreAppData> = transport.perform {
         it.get {
             url(path = "apps.json")

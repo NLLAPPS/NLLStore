@@ -50,6 +50,5 @@ dependencies {
     implementation(libs.square.okHttp.loggingInterceptor)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.workManagerRuntimeKtx)
-    implementation project(":simpleinstaller")
     implementation project(":notify")
 }

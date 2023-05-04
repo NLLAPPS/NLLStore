@@ -18,12 +18,17 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.nll.store.R
+import com.nll.store.activityresult.InstallPermissionContract
 import com.nll.store.api.StoreApiManager
 import com.nll.store.connectivity.InternetStateProvider
 import com.nll.store.databinding.ActivityAppListBinding
 import com.nll.store.debug.DebugLogActivity
 import com.nll.store.debug.DebugLogService
 import com.nll.store.installer.AppInstallManager
+import com.nll.store.installer.InstallationState
+import com.nll.store.installer.PackageInstallFailureCause
+import com.nll.store.installer.PackageInstallResult
+import com.nll.store.installer.UriApkSource
 import com.nll.store.log.CLog
 import com.nll.store.model.AppData
 import com.nll.store.model.LocalAppData
@@ -31,17 +36,15 @@ import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
 import com.nll.store.utils.ApiLevel
 import com.nll.store.utils.extTryStartActivity
-import io.github.solrudev.simpleinstaller.activityresult.InstallPermissionContract
 import kotlinx.coroutines.launch
 
 
 class AppListActivity : AppCompatActivity() {
     private val logTag = "AppListActivity"
     private lateinit var binding: ActivityAppListBinding
-    private lateinit var appInstallManager: AppInstallManager
     private lateinit var storeApiManager: StoreApiManager
     private lateinit var appsListAdapter: AppsListAdapter
-    private val installPermissionLauncher = registerForActivityResult(InstallPermissionContract()) { isGranted ->
+    private val installPermissionLauncher = registerForActivityResult(InstallPermissionContract(this)) { isGranted ->
         if (CLog.isDebug()) {
             CLog.log(logTag, "installPermissionLauncher() -> isGranted: $isGranted")
         }
@@ -55,6 +58,7 @@ class AppListActivity : AppCompatActivity() {
 
     }
 
+
     private val postNotificationPermission = activityResultRegistry.register("notification", ActivityResultContracts.RequestPermission()) { hasNotificationPermission ->
         if (hasNotificationPermission) {
             DebugLogService.startLogging(this)
@@ -64,7 +68,12 @@ class AppListActivity : AppCompatActivity() {
 
     private val pickApkLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
-            appInstallManager.install(it)
+            val hasReadPermission = checkCallingOrSelfUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) == PackageManager.PERMISSION_GRANTED
+            if (hasReadPermission) {
+                AppInstallManager.install(this, null, arrayOf(UriApkSource(it)))
+            } else {
+                Toast.makeText(this, R.string.unable_to_open_file, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -74,7 +83,7 @@ class AppListActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         storeApiManager = StoreApiManager.getInstance(this)
-        appInstallManager = AppInstallManager.getInstance(this)
+
 
         binding.toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
@@ -104,7 +113,7 @@ class AppListActivity : AppCompatActivity() {
                     CLog.log(logTag, "AppsListAdapter() -> onInstallClick() -> storeAppData: $storeAppData")
                 }
                 if (storeAppData.isNLLStoreApp) {
-                    if (!appInstallManager.isInstalling()) {
+                    if (!AppInstallManager.hasActiveSession) {
 
                         if (packageManager.canRequestPackageInstalls()) {
 
@@ -112,7 +121,7 @@ class AppListActivity : AppCompatActivity() {
                                 postNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                             }
 
-                            appInstallManager.startDownload(storeAppData, null)
+                            AppInstallManager.startDownload(this@AppListActivity, storeAppData, null)
                             InstallAppFragment.display(supportFragmentManager)
                         } else {
                             Toast.makeText(this@AppListActivity, R.string.install_permission_request, Toast.LENGTH_SHORT).show()
@@ -146,8 +155,8 @@ class AppListActivity : AppCompatActivity() {
                 }
 
                 if (storeAppData.isNLLStoreApp) {
-                    if (!appInstallManager.isInstalling()) {
-                        appInstallManager.startDownload(storeAppData, localAppData)
+                    if (!AppInstallManager.hasActiveSession) {
+                        AppInstallManager.startDownload(this@AppListActivity, storeAppData, localAppData)
                         InstallAppFragment.display(supportFragmentManager)
                     } else {
                         Toast.makeText(this@AppListActivity, R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
@@ -179,6 +188,56 @@ class AppListActivity : AppCompatActivity() {
         observerStoreConnectionState()
         observerAppList()
         observeNetworkState()
+        observerInstallState()
+
+    }
+
+    private fun observerInstallState() {
+        if (CLog.isDebug()) {
+            CLog.log(logTag, "observerInstallState()")
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+
+                AppInstallManager.observeInstallState().collect { installState ->
+                    if (CLog.isDebug()) {
+                        CLog.log(logTag, "observerInstallState() -> installState: $installState")
+                    }
+
+                    when (installState) {
+                        /**
+                         * We are only interested with results after user selects a file via Install menu
+                         */
+                        is InstallationState.Install.Completed -> {
+                            when (installState.installResult) {
+                                PackageInstallResult.Success -> {
+                                    Toast.makeText(this@AppListActivity, R.string.install_success, Toast.LENGTH_SHORT).show()
+                                }
+
+                                is PackageInstallResult.Failure -> {
+                                    val message = when (installState.installResult.cause) {
+                                        is PackageInstallFailureCause.Aborted -> getString(R.string.install_error_aborted)
+                                        is PackageInstallFailureCause.Blocked -> getString(R.string.install_error_blocked)
+                                        is PackageInstallFailureCause.Conflict -> getString(R.string.install_error_conflict)
+                                        is PackageInstallFailureCause.Generic -> installState.installResult.cause.message ?: getString(R.string.unknown_error)
+                                        is PackageInstallFailureCause.Incompatible -> getString(R.string.install_error_incompatible)
+                                        is PackageInstallFailureCause.Invalid -> getString(R.string.install_error_invalid)
+                                        is PackageInstallFailureCause.Storage -> getString(R.string.install_error_storage)
+                                        null -> getString(R.string.install_error_unknown_or_user_cancelled)
+                                    }
+
+                                    Toast.makeText(this@AppListActivity, message, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+
+                        else -> {
+                            // Unused
+                        }
+                    }
+                }
+            }
+        }
 
     }
 
@@ -263,7 +322,7 @@ class AppListActivity : AppCompatActivity() {
     }
 
     private fun pickAndInstall() {
-        if (!appInstallManager.isInstalling()) {
+        if (!AppInstallManager.hasActiveSession) {
             try {
                 pickApkLauncher.launch("application/vnd.android.package-archive")
             } catch (e: ActivityNotFoundException) {

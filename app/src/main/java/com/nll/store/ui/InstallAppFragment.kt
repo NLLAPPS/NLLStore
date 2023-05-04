@@ -16,11 +16,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.nll.store.R
 import com.nll.store.databinding.FragmentAppInstallerBinding
 import com.nll.store.installer.AppInstallManager
+import com.nll.store.installer.FileApkSource
+import com.nll.store.installer.InstallationState
+import com.nll.store.installer.PackageInstallFailureCause
+import com.nll.store.installer.PackageInstallResult
 import com.nll.store.log.CLog
 import com.nll.store.utils.extHumanReadableByteCount
 import com.nll.store.utils.extTryStartActivity
-import io.github.solrudev.simpleinstaller.data.InstallFailureCause
-import io.github.solrudev.simpleinstaller.data.InstallResult
 import kotlinx.coroutines.launch
 
 
@@ -61,13 +63,13 @@ class InstallAppFragment : DialogFragment() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
 
-                AppInstallManager.getInstance(requireContext()).observeInstallState().collect { installState ->
+                AppInstallManager.observeInstallState().collect { installState ->
                     if (CLog.isDebug()) {
                         CLog.log(logTag, "observerInstallState() -> installState: $installState")
                     }
 
                     when (installState) {
-                        is AppInstallManager.State.Download.Completed -> {
+                        is InstallationState.Download.Completed -> {
                             val totalBytes = installState.downloadedFile.length().extHumanReadableByteCount(true)
                             binding.downloadProgressText.text = getString(R.string.downloaded)
                             binding.downloadedBytes.text = totalBytes
@@ -78,11 +80,11 @@ class InstallAppFragment : DialogFragment() {
                                 isEnabled = true
                                 setOnClickListener {
                                     if (CLog.isDebug()) {
-                                        CLog.log(logTag, "installButton() clicked, isInstalling: ${AppInstallManager.getInstance(requireContext()).isInstalling()}, packageManager.canRequestPackageInstalls(): ${requireContext().packageManager.canRequestPackageInstalls()}")
+                                        CLog.log(logTag, "installButton() clicked, hasActiveSession: ${AppInstallManager.hasActiveSession}, packageManager.canRequestPackageInstalls(): ${requireContext().packageManager.canRequestPackageInstalls()}")
                                     }
 
-                                    if (!AppInstallManager.getInstance(requireContext()).isInstalling()) {
-                                        AppInstallManager.getInstance(requireContext()).install(installState.downloadedFile)
+                                    if (!AppInstallManager.hasActiveSession) {
+                                        AppInstallManager.install(requireContext(), installState.storeAppData.packageName, arrayOf(FileApkSource(installState.downloadedFile)))
                                     } else {
                                         Toast.makeText(requireContext(), R.string.ongoing_installation, Toast.LENGTH_SHORT).show()
                                     }
@@ -90,7 +92,7 @@ class InstallAppFragment : DialogFragment() {
                             }
                         }
 
-                        is AppInstallManager.State.Download.Error -> {
+                        is InstallationState.Download.Error -> {
                             binding.downloadProgressText.text = installState.toString()
                             binding.downloadProgress.progress = 0
                             binding.installDownloadedAppButton.isEnabled = false
@@ -107,14 +109,14 @@ class InstallAppFragment : DialogFragment() {
                                 show()
                             }
                             val message = when (installState.message) {
-                                is AppInstallManager.State.Download.Error.Message.GenericError -> installState.message.message
-                                AppInstallManager.State.Download.Error.Message.MalformedFile -> requireContext().getString(R.string.malformed_file)
-                                is AppInstallManager.State.Download.Error.Message.ServerError -> getString(R.string.server_error, installState.message.responseCode.toString())
+                                is InstallationState.Download.Error.Message.GenericError -> installState.message.message
+                                InstallationState.Download.Error.Message.MalformedFile -> requireContext().getString(R.string.malformed_file)
+                                is InstallationState.Download.Error.Message.ServerError -> getString(R.string.server_error, installState.message.responseCode.toString())
                             }
                             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
                         }
 
-                        is AppInstallManager.State.Download.Progress -> {
+                        is InstallationState.Download.Progress -> {
                             val totalBytes = installState.totalBytes.extHumanReadableByteCount(true)
                             val downloadedBytes = installState.bytesCopied.extHumanReadableByteCount(true)
                             binding.downloadProgressText.text = getString(R.string.downloading)
@@ -123,7 +125,7 @@ class InstallAppFragment : DialogFragment() {
                             binding.totalBytes.text = totalBytes
                         }
 
-                        is AppInstallManager.State.Download.Started -> {
+                        is InstallationState.Download.Started -> {
 
                             binding.toolbar.title = installState.storeAppData.name
                             binding.installVersionNotes.text = if (installState.storeAppData.versionNotes.isEmpty()) {
@@ -135,23 +137,23 @@ class InstallAppFragment : DialogFragment() {
 
                         }
 
-                        is AppInstallManager.State.Install.Completed -> {
+                        is InstallationState.Install.Completed -> {
                             when (installState.installResult) {
-                                InstallResult.Success -> {
+                                PackageInstallResult.Success -> {
                                     dismiss()
                                 }
 
-                                is InstallResult.Failure -> {
+                                is PackageInstallResult.Failure -> {
                                     binding.installDownloadedAppButton.isEnabled = true
 
                                     val message = when (installState.installResult.cause) {
-                                        is InstallFailureCause.Aborted -> getString(R.string.install_error_aborted)
-                                        is InstallFailureCause.Blocked -> getString(R.string.install_error_blocked)
-                                        is InstallFailureCause.Conflict -> getString(R.string.install_error_conflict)
-                                        is InstallFailureCause.Generic -> installState.installResult.cause?.message ?: getString(R.string.unknown_error)
-                                        is InstallFailureCause.Incompatible -> getString(R.string.install_error_incompatible)
-                                        is InstallFailureCause.Invalid -> getString(R.string.install_error_invalid)
-                                        is InstallFailureCause.Storage -> getString(R.string.install_error_storage)
+                                        is PackageInstallFailureCause.Aborted -> getString(R.string.install_error_aborted)
+                                        is PackageInstallFailureCause.Blocked -> getString(R.string.install_error_blocked)
+                                        is PackageInstallFailureCause.Conflict -> getString(R.string.install_error_conflict)
+                                        is PackageInstallFailureCause.Generic -> installState.installResult.cause.message ?: getString(R.string.unknown_error)
+                                        is PackageInstallFailureCause.Incompatible -> getString(R.string.install_error_incompatible)
+                                        is PackageInstallFailureCause.Invalid -> getString(R.string.install_error_invalid)
+                                        is PackageInstallFailureCause.Storage -> getString(R.string.install_error_storage)
                                         null -> getString(R.string.install_error_unknown_or_user_cancelled)
                                     }
                                     with(MaterialAlertDialogBuilder(requireContext()))
@@ -167,11 +169,11 @@ class InstallAppFragment : DialogFragment() {
                             }
                         }
 
-                        is AppInstallManager.State.Install.Progress -> {
+                        is InstallationState.Install.Progress -> {
                             binding.installDownloadedAppButton.isEnabled = false
                         }
 
-                        AppInstallManager.State.Install.Started -> {
+                        InstallationState.Install.Started -> {
                             binding.installDownloadedAppButton.isEnabled = false
 
                         }

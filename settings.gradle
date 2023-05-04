@@ -31,5 +31,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "NLL Store"
 include(":app")
-include(":simpleinstaller")
 include(":notify")

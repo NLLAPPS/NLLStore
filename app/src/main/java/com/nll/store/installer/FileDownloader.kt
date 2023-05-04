@@ -1,6 +1,7 @@
 package com.nll.store.installer
 
 import android.content.Context
+import android.content.pm.PackageInfo
 import android.webkit.MimeTypeMap
 import com.nll.store.log.CLog
 import com.nll.store.model.StoreAppData
@@ -17,14 +18,14 @@ class FileDownloader() {
      * Double needed as calculation can go ver Int.Max
      */
     private fun calculatePercentage(obtained: Double, total: Double) = (obtained * 100 / total).toInt()
-    fun download(context: Context, storeAppData: StoreAppData, targetFile: File, callback: (AppInstallManager.State.Download) -> Unit) {
+    fun download(context: Context, storeAppData: StoreAppData, targetFile: File, callback: Callback) {
         if (CLog.isDebug()) {
             CLog.log(logTag, "download() -> downloadUrl: ${storeAppData.downloadUrl}, targetFile: $targetFile")
         }
 
-        callback(AppInstallManager.State.Download.Started(storeAppData))
+        callback.onStarted(storeAppData)
 
-        if(targetFile.exists()){
+        if (targetFile.exists()) {
             if (CLog.isDebug()) {
                 CLog.log(logTag, "download() -> targetFile was already downloaded. Deleting it")
             }
@@ -54,7 +55,7 @@ class FileDownloader() {
                             if (CLog.isDebug()) {
                                 CLog.log(logTag, "download() -> percent: $percent, bytesCopied: $bytesCopied, length: $length")
                             }
-                            callback(AppInstallManager.State.Download.Progress(storeAppData, percent, bytesCopied, length))
+                            callback.onProgress(storeAppData, percent, bytesCopied, length)
                         }
                     }
                     if (CLog.isDebug()) {
@@ -66,13 +67,13 @@ class FileDownloader() {
                         if (CLog.isDebug()) {
                             CLog.log(logTag, "download() -> Renaming completed. Emitting DownloadStatus.Completed")
                         }
-                        callback(AppInstallManager.State.Download.Completed(storeAppData, targetFile, packageInfo))
+                        callback.onCompleted(storeAppData, targetFile, packageInfo)
                     } else {
                         if (CLog.isDebug()) {
                             CLog.log(logTag, "download() -> Target file was malformed! Delete it")
                         }
                         targetFile.delete()
-                        callback(AppInstallManager.State.Download.Error(storeAppData, AppInstallManager.State.Download.Error.Message.MalformedFile))
+                        callback.onMalformedFileError(storeAppData)
                     }
 
                 }
@@ -80,23 +81,32 @@ class FileDownloader() {
                 if (CLog.isDebug()) {
                     CLog.log(logTag, "download() -> Download error. responseCode: $responseCode")
                 }
-                callback(AppInstallManager.State.Download.Error(storeAppData, AppInstallManager.State.Download.Error.Message.ServerError(responseCode)))
+                callback.onServerError(storeAppData, responseCode)
             }
         } catch (e: Exception) {
             if (CLog.isDebug()) {
                 CLog.logPrintStackTrace(e)
             }
-            callback(AppInstallManager.State.Download.Error(storeAppData, AppInstallManager.State.Download.Error.Message.GenericError(e.message ?: "NULL")))
+            callback.onError(storeAppData, e)
         }
     }
 
-    companion object{
+    interface Callback {
+        fun onStarted(storeAppData: StoreAppData)
+        fun onProgress(storeAppData: StoreAppData, percent: Int, bytesCopied: Int, length: Long)
+        fun onCompleted(storeAppData: StoreAppData, targetFile: File, packageInfo: PackageInfo)
+        fun onError(storeAppData: StoreAppData, exception: Exception)
+        fun onServerError(storeAppData: StoreAppData, responseCode: Int)
+        fun onMalformedFileError(storeAppData: StoreAppData)
+    }
+
+    companion object {
         fun getDestinationFile(context: Context, storeAppData: StoreAppData): File {
             val extension = MimeTypeMap.getFileExtensionFromUrl(storeAppData.downloadUrl)
-            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
             val fileName = "${storeAppData.packageName}_${storeAppData.version}.$extension"
             return File(getBaseFolder(context), fileName)
         }
+
         fun getBaseFolder(context: Context): File {
             val childFolder = "apks"
             val baseFolder = File(context.externalCacheDir, childFolder)
