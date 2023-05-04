@@ -60,8 +60,11 @@ class InstallAppFragment : DialogFragment() {
         if (CLog.isDebug()) {
             CLog.log(logTag, "observerInstallState()")
         }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+        viewLifecycleOwner.lifecycleScope .launch {
+            /**
+             * Must be Lifecycle.State.CREATED otherwise we miss download completed event while waiting fro user to confirm notification permission
+             */
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
 
                 AppInstallManager.observeInstallState().collect { installState ->
                     if (CLog.isDebug()) {

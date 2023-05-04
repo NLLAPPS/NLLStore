@@ -14,6 +14,7 @@ data class StoreAppData(
     @SerialName("packageName") val packageName: String,
     @SerialName("version") val version: Long,
     @SerialName("downloadUrl") val downloadUrl: String,
+    @SerialName("autoUpdate") val autoUpdate: Boolean,
     @SerialName("logoUrl") val logoUrl: String,
     @SerialName("description") val description: String,
     @SerialName("versionNotes") val versionNotes: String,

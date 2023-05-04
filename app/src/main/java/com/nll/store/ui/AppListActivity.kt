@@ -117,6 +117,9 @@ class AppListActivity : AppCompatActivity() {
 
                         if (packageManager.canRequestPackageInstalls()) {
 
+                            /**
+                             * Ask user to approve notification permission so we can use it when checking updates
+                             */
                             if (ApiLevel.isTPlus() && !hasNotificationPermission()) {
                                 postNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                             }

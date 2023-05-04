@@ -13,8 +13,8 @@ import com.nll.store.utils.CoroutineScopeFactory
 import com.nll.store.utils.getPackageInfoFromApk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -29,22 +29,24 @@ object AppInstallManager {
 
     private val iOScope by lazy { CoroutineScopeFactory.create(Dispatchers.IO) }
     private var installJob: Job? = null
-    private val _installationState = MutableStateFlow<InstallationState?>(null)
+    private val _installationState = MutableSharedFlow<InstallationState>()
     var hasActiveSession = false
         private set
 
     fun cancelInstall() {
         installJob?.cancel()
     }
-
-    fun observeInstallState() = _installationState.asStateFlow()
+    fun observeInstallState() = _installationState.asSharedFlow()
     fun updateInstallState(installationState: InstallationState) {
         if (CLog.isDebug()) {
             CLog.log(logTag, "updateInstallState() -> installationState: $installationState")
         }
-        _installationState.value = installationState
+        iOScope.launch {
+            _installationState.emit(installationState)
+        }
 
     }
+
 
     fun startDownload(context: Context, storeAppData: StoreAppData, localAppData: LocalAppData?) {
         if (CLog.isDebug()) {
@@ -70,7 +72,7 @@ object AppInstallManager {
                         if (CLog.isDebug()) {
                             CLog.log(logTag, "startDownload() -> We have a downloaded file and no installed version. No need to download")
                         }
-                        _installationState.value = InstallationState.Download.Completed(storeAppData, targetFile, downloadedApk)
+                        updateInstallState( InstallationState.Download.Completed(storeAppData, targetFile, downloadedApk))
                         false
                     } else {
 
@@ -92,7 +94,7 @@ object AppInstallManager {
                                 if (CLog.isDebug()) {
                                     CLog.log(logTag, "startDownload() -> We have a downloaded file with same or new version of installed version. No need to download. Updating state to Completed")
                                 }
-                                _installationState.value = InstallationState.Download.Completed(storeAppData, targetFile, downloadedApk)
+                                updateInstallState( InstallationState.Download.Completed(storeAppData, targetFile, downloadedApk))
                                 false
                             }
                         } else {
@@ -125,27 +127,27 @@ object AppInstallManager {
                 FileDownloader().download(context.applicationContext, storeAppData, targetFile, object : FileDownloader.Callback {
 
                     override fun onStarted(storeAppData: StoreAppData) {
-                        _installationState.value = InstallationState.Download.Started(storeAppData)
+                        updateInstallState( InstallationState.Download.Started(storeAppData))
                     }
 
                     override fun onProgress(storeAppData: StoreAppData, percent: Int, bytesCopied: Int, length: Long) {
-                        _installationState.value = InstallationState.Download.Progress(storeAppData, percent, bytesCopied, length)
+                        updateInstallState( InstallationState.Download.Progress(storeAppData, percent, bytesCopied, length))
                     }
 
                     override fun onCompleted(storeAppData: StoreAppData, targetFile: File, packageInfo: PackageInfo) {
-                        _installationState.value = InstallationState.Download.Completed(storeAppData, targetFile, packageInfo)
+                        updateInstallState( InstallationState.Download.Completed(storeAppData, targetFile, packageInfo))
                     }
 
                     override fun onError(storeAppData: StoreAppData, exception: Exception) {
-                        _installationState.value = InstallationState.Download.Error(storeAppData, InstallationState.Download.Error.Message.GenericError(exception.message ?: "NULL"))
+                        updateInstallState( InstallationState.Download.Error(storeAppData, InstallationState.Download.Error.Message.GenericError(exception.message ?: "NULL")))
                     }
 
                     override fun onServerError(storeAppData: StoreAppData, responseCode: Int) {
-                        _installationState.value = InstallationState.Download.Error(storeAppData, InstallationState.Download.Error.Message.ServerError(responseCode))
+                        updateInstallState( InstallationState.Download.Error(storeAppData, InstallationState.Download.Error.Message.ServerError(responseCode)))
                     }
 
                     override fun onMalformedFileError(storeAppData: StoreAppData) {
-                        _installationState.value = InstallationState.Download.Error(storeAppData, InstallationState.Download.Error.Message.MalformedFile)
+                        updateInstallState( InstallationState.Download.Error(storeAppData, InstallationState.Download.Error.Message.MalformedFile))
                     }
 
                 })
@@ -162,7 +164,7 @@ object AppInstallManager {
             hasActiveSession = true
 
             iOScope.launch {
-                _installationState.value = InstallationState.Install.Started
+                updateInstallState( InstallationState.Install.Started)
                 var session: PackageInstaller.Session? = null
                 try {
                     val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
@@ -185,9 +187,7 @@ object AppInstallManager {
                         if(ApiLevel.isTPlus()){
                             setPackageSource(PackageInstaller.PACKAGE_SOURCE_STORE)
                         }
-                        /**
-                         * TODO Explore setPermissionState() - android.permission.INSTALL_GRANT_RUNTIME_PERMISSIONS - https://developer.android.com/reference/android/content/pm/PackageInstaller.SessionParams#setPermissionState(java.lang.String,%20int)
-                         */
+
                     }
 
                     val sessionId = context.packageManager.packageInstaller.createSession(sessionParams)
@@ -200,16 +200,16 @@ object AppInstallManager {
                 } catch (e: IOException) {
                     hasActiveSession = false
                     CLog.logPrintStackTrace(e)
-                    _installationState.value = InstallationState.Install.Completed(PackageInstallResult.Failure(PackageInstallFailureCause.Generic(e.message)))
+                    updateInstallState( InstallationState.Install.Completed(PackageInstallResult.Failure(PackageInstallFailureCause.Generic(e.message))))
                 } catch (e: RuntimeException) {
                     hasActiveSession = false
                     session?.abandon()
-                    _installationState.value = InstallationState.Install.Completed(PackageInstallResult.Failure(PackageInstallFailureCause.Aborted(e.message)))
+                    updateInstallState( InstallationState.Install.Completed(PackageInstallResult.Failure(PackageInstallFailureCause.Aborted(e.message))))
                     CLog.logPrintStackTrace(e)
                 }
             }
         } else {
-            _installationState.value = InstallationState.Install.Completed(PackageInstallResult.Failure(PackageInstallFailureCause.Aborted("Can't install while another install session is active.")))
+            updateInstallState( InstallationState.Install.Completed(PackageInstallResult.Failure(PackageInstallFailureCause.Aborted("Can't install while another install session is active."))))
         }
     }
 
@@ -260,9 +260,9 @@ object AppInstallManager {
              */
             /*if (sessionId == currentSessionId) {
                 if (success) {
-                    _installationState.value = InstallationState.Install.Completed(PackageInstallResult.Success)
+                    updateInstallState( InstallationState.Install.Completed(PackageInstallResult.Success)
                 } else {
-                    _installationState.value = InstallationState.Install.Completed(PackageInstallResult.Failure(PackageInstallFailureCause.Generic("Error onFinished()")))
+                    updateInstallState( InstallationState.Install.Completed(PackageInstallResult.Failure(PackageInstallFailureCause.Generic("Error onFinished()")))
                 }
             }*/
 
@@ -270,7 +270,7 @@ object AppInstallManager {
 
         override fun onProgressChanged(sessionId: Int, progress: Float) {
             if (sessionId == currentSessionId) {
-                _installationState.value = InstallationState.Install.Progress(InstallationState.Install.ProgressData((progress * 100).toInt(), 100))
+                updateInstallState( InstallationState.Install.Progress(InstallationState.Install.ProgressData((progress * 100).toInt(), 100)))
             }
         }
     }

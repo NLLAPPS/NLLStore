@@ -137,6 +137,9 @@ class StoreApiManager private constructor(private val applicationContext: Contex
         }, pkgFilter)
     }
 
+    /**
+     * TODO Implement automatic updating if APH
+     */
     fun checkUpdates() {
         if (CLog.isDebug()) {
             CLog.log(logTag, "checkUpdates()")
