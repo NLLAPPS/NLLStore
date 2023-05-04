@@ -305,7 +305,7 @@ class AppListActivity : AppCompatActivity() {
             CLog.log(logTag, "observeNetworkState()")
         }
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 InternetStateProvider.networkStateFlow().collect { networkStateFlow ->
                     if (CLog.isDebug()) {
                         CLog.log(logTag, "networkStateFlow() -> $networkStateFlow")
