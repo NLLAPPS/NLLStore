@@ -304,15 +304,19 @@ class AppListActivity : AppCompatActivity() {
         if (CLog.isDebug()) {
             CLog.log(logTag, "observeNetworkState()")
         }
+        /**
+         * Lifecycle.State.STARTED is important we don't want infinite loop since showing network dialog changes the resume state.
+         * CREATED is not applicable as we might re-load when app becomes visible
+         */
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 InternetStateProvider.networkStateFlow().collect { networkStateFlow ->
                     if (CLog.isDebug()) {
-                        CLog.log(logTag, "networkStateFlow() -> $networkStateFlow")
+                        CLog.log(logTag, "observeNetworkState() -> $networkStateFlow")
                     }
                     if (networkStateFlow.isDeviceOnline()) {
                         if (CLog.isDebug()) {
-                            CLog.log(logTag, "networkStateFlow() -> Device is online. Call viewModel.loadAppList()")
+                            CLog.log(logTag, "observeNetworkState() -> Device is online. Call viewModel.loadAppList()")
                         }
                         storeApiManager.loadAppList()
                     } else {

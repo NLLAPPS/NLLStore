@@ -129,12 +129,12 @@ class StoreApiManager private constructor(private val applicationContext: Contex
             addDataScheme("package")
         }
 
-        applicationContext.registerReceiver(PackageReceiver { packageName ->
+        ContextCompat.registerReceiver(applicationContext, PackageReceiver { packageName ->
             if (CLog.isDebug()) {
                 CLog.log(logTag, "registerPackageReceiver() -> callback() -> packageName: $packageName")
             }
             loadAppList()
-        }, pkgFilter)
+        }, pkgFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     /**

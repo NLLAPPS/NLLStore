@@ -11,14 +11,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 
 /**
-
-InternetStateProvider.isDeviceOnline()
-or
-
-InternetStateProvider.isDeviceOnlineFlow().onEach { isDeviceOnline ->
-
-}.launchIn(lifecycleScope)
-
+ * TODO We have a bug read below
+ * We have a bug with this class. Cannot reproduce reliably but seems to happens when changing between wifi and mobile data.
+ * We miss the latest state and get stuck on offline (NetworkState#hasInternetCapability=false)
  */
 object InternetStateProvider {
     private const val logTag = "InternetStateProvider"
