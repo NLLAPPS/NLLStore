@@ -7,7 +7,7 @@ import com.nll.store.log.CLog
 import com.nll.store.utils.extConnectivityManager
 import com.nll.store.utils.extTryStartActivity
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 
 /**
@@ -39,7 +39,7 @@ object InternetStateProvider {
     }
 
 
-     fun start(context: Context) {
+    fun start(context: Context) {
         if (CLog.isDebug()) {
             CLog.log(logTag, "start -> Start observing Internet state")
         }
@@ -72,5 +72,5 @@ object InternetStateProvider {
         return result
     }
 
-    fun networkStateFlow() = networkState.asSharedFlow()
+    fun networkStateFlow() = networkState.asStateFlow()
 }
