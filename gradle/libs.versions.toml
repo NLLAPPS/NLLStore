@@ -8,7 +8,7 @@ appVersionCode = "1"
 ########################################################################################
 # Build
 ########################################################################################
-compileSdkVersion = "33"
+compileSdkVersion = "34"
 minSdkVersion = "29"
 targetSdkVersion = "33"
 #buildToolsVersion = "30.0.2"
@@ -17,7 +17,7 @@ javaVersion = "11" # JavaVersion.VERSION_11
 ########################################################################################
 # Main
 ########################################################################################
-androidGradleVersion = "8.2.0-alpha04"
+androidGradleVersion = "8.2.0-alpha07"
 kotlinVersion = "1.8.21"
 kspVersion = "1.8.21-1.0.11" # Should only be updated when Kotlin version is updated https://github.com/google/ksp/releases
 
@@ -26,7 +26,7 @@ kspVersion = "1.8.21-1.0.11" # Should only be updated when Kotlin version is upd
 # Rest
 ########################################################################################
 acraVersion = "5.9.7" # https://github.com/ACRA/acra
-androidXactivityVersion = "1.7.1" # https://developer.android.com/jetpack/androidx/releases/activity
+androidXactivityVersion = "1.7.2" # https://developer.android.com/jetpack/androidx/releases/activity
 androidXappCompatVersion = "1.7.0-alpha02" # https://developer.android.com/jetpack/androidx/releases/appcompat
 androidXconstraintLayoutVersion = "2.1.4" # https://developer.android.com/jetpack/androidx/releases/constraintlayout
 androidXcoordinatorLayoutVersion = "1.2.0" # https://developer.android.com/jetpack/androidx/releases/coordinatorlayout
@@ -37,15 +37,15 @@ androidXstartupVersion = "1.2.0-alpha02" # https://developer.android.com/jetpack
 androidXCoreVersion = "1.10.1" # https://developer.android.com/jetpack/androidx/releases/core
 androidXworkManagerVersion = "2.8.1" # https://developer.android.com/jetpack/androidx/releases/work
 androidXannotationVersion = "1.6.0"
-coilVersion = "2.3.0" # https://github.com/coil-kt/coil
+coilVersion = "2.4.0" # https://github.com/coil-kt/coil
 coroutinesVersion = "1.7.1" # https://github.com/Kotlin/kotlinx.coroutines
 kotPrefVersion = "2.13.2" # https://github.com/chibatching/Kotpref
 materialComponentsVersion = "1.9.0" # https://github.com/material-components/material-components-android/releases
 okHttpVersion = "5.0.0-alpha.11" # https://square.github.io/okhttp/
 okioVersion ="3.3.0"
-kotlinXserializationJsonVersion = "1.5.0" # https://github.com/Kotlin/kotlinx.serialization
+kotlinXserializationJsonVersion = "1.5.1" # https://github.com/Kotlin/kotlinx.serialization
 retrofitVersion ="2.9.0"
-ktorVersion = "2.3.0" # https://ktor.io/
+ktorVersion = "2.3.1" # https://ktor.io/
 
 
 [libraries]
