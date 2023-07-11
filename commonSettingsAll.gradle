@@ -2,12 +2,18 @@ apply plugin: libs.plugins.kotlin.android.get().pluginId
 apply plugin: libs.plugins.kotlin.ksp.get().pluginId
 apply plugin: libs.plugins.kotlin.parcelize.get().pluginId
 
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
 android {
 
     def libsJavaVersion = libs.versions.javaVersion.get().toString()
     def javaVersionEnum = JavaVersion.toVersion(libsJavaVersion)
 
-    //compileSdkPreview "UpsideDownCake"
     compileSdk(libs.versions.compileSdkVersion.get().toInteger())
     compileOptions {
         sourceCompatibility javaVersionEnum
@@ -26,7 +32,6 @@ android {
 
 
     defaultConfig {
-        //targetSdkPreview "UpsideDownCake"
         minSdk(libs.versions.minSdkVersion.get().toInteger())
         targetSdk(libs.versions.targetSdkVersion.get().toInteger())
         versionName(libs.versions.appVersionName.get())

@@ -109,7 +109,12 @@ class FileDownloader() {
 
         fun getBaseFolder(context: Context): File {
             val childFolder = "apks"
-            val baseFolder = File(context.externalCacheDir, childFolder)
+
+            /**
+             * Use getExternalFilesDir instead of externalCacheDir.
+             * There have been instances where Android cleared cache dir while we are downloading the apk
+             */
+            val baseFolder = File(context.getExternalFilesDir(null), childFolder)
             if (!baseFolder.exists()) {
                 baseFolder.mkdirs()
             }

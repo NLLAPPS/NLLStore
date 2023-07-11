@@ -59,54 +59,54 @@ class App : Application(), ImageLoaderFactory {
         if (CLog.isDebug()) {
             CLog.log(logTag, "initACRA()")
         }
-         try {
-             initAcra {
+        try {
+            initAcra {
 
-                 buildConfigClass = BuildConfig::class.java
-                 reportFormat = StringFormat.KEY_VALUE_LIST
-                 reportContent = listOf(
-                     ReportField.USER_COMMENT,
-                     ReportField.PACKAGE_NAME,
-                     ReportField.APP_VERSION_NAME,
-                     ReportField.ANDROID_VERSION,
-                     ReportField.BRAND,
-                     ReportField.PHONE_MODEL,
-                     ReportField.PRODUCT,
-                     ReportField.USER_APP_START_DATE,
-                     ReportField.USER_CRASH_DATE,
-                     ReportField.STACK_TRACE,
-                     ReportField.LOGCAT
-                 )
+                buildConfigClass = BuildConfig::class.java
+                reportFormat = StringFormat.KEY_VALUE_LIST
+                reportContent = listOf(
+                    ReportField.USER_COMMENT,
+                    ReportField.PACKAGE_NAME,
+                    ReportField.APP_VERSION_NAME,
+                    ReportField.ANDROID_VERSION,
+                    ReportField.BRAND,
+                    ReportField.PHONE_MODEL,
+                    ReportField.PRODUCT,
+                    ReportField.USER_APP_START_DATE,
+                    ReportField.USER_CRASH_DATE,
+                    ReportField.STACK_TRACE,
+                    ReportField.LOGCAT
+                )
 
-                 mailSender {
-                     mailTo = contactEmail
-                     reportAsFile = false
-                 }
+                mailSender {
+                    mailTo = contactEmail
+                    reportAsFile = false
+                }
 
-                 notification {
-                     title = getString(R.string.crash_notif_title)
-                     text = getString(R.string.crash_dialog_text)
-                     channelName = getString(R.string.app_crash_notification_channel)
-                     sendButtonText = getString(R.string.send)
-                     discardButtonText = getString(R.string.cancel)
-                     sendOnClick = true
-                     resDiscardButtonIcon = R.drawable.crash_log_discard
-                     resSendButtonIcon = R.drawable.crash_log_send
-                 }
+                notification {
+                    title = getString(R.string.crash_notif_title)
+                    text = getString(R.string.crash_dialog_text)
+                    channelName = getString(R.string.app_crash_notification_channel)
+                    sendButtonText = getString(R.string.send)
+                    discardButtonText = getString(R.string.cancel)
+                    sendOnClick = true
+                    resDiscardButtonIcon = R.drawable.crash_log_discard
+                    resSendButtonIcon = R.drawable.crash_log_send
+                }
 
-                 //Notification may not work, also use dialog for now. See https://github.com/ACRA/acra/issues/1146
-                 dialog {
-                     title = getString(R.string.crash_notif_title)
-                     text = getString(R.string.crash_dialog_text)
+                //Notification may not work, also use dialog for now. See https://github.com/ACRA/acra/issues/1146
+                dialog {
+                    title = getString(R.string.crash_notif_title)
+                    text = getString(R.string.crash_dialog_text)
 
-                 }
-             }
+                }
+            }
 
 
-         } catch (e: Exception) {
-             //Already called. Ignore. It seems to be called more than once on rare occasions
-             CLog.logPrintStackTrace(e)
-         }
+        } catch (e: Exception) {
+            //Already called. Ignore. It seems to be called more than once on rare occasions
+            CLog.logPrintStackTrace(e)
+        }
     }
 
     override fun newImageLoader() = ImageLoader.Builder(this)
