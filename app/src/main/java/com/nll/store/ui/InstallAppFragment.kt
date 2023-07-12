@@ -131,10 +131,8 @@ class InstallAppFragment : DialogFragment() {
                         is InstallationState.Download.Started -> {
 
                             binding.toolbar.title = installState.storeAppData.name
-                            binding.installVersionNotes.text = if (installState.storeAppData.versionNotes.isEmpty()) {
+                            binding.installVersionNotes.text = installState.storeAppData.versionNotes.ifEmpty {
                                 installState.storeAppData.description
-                            } else {
-                                installState.storeAppData.versionNotes
                             }
 
 
@@ -143,7 +141,7 @@ class InstallAppFragment : DialogFragment() {
                         is InstallationState.Install.Completed -> {
                             when (installState.installResult) {
                                 PackageInstallResult.Success -> {
-                                    dismiss()
+                                    dismissAllowingStateLoss()
                                 }
 
                                 is PackageInstallResult.Failure -> {
@@ -181,13 +179,6 @@ class InstallAppFragment : DialogFragment() {
 
                         }
 
-                        null -> {
-
-
-                           //Unused
-
-
-                        }
                     }
 
 

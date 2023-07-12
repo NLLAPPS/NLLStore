@@ -17,7 +17,7 @@ javaVersion = "17" # JavaVersion.VERSION_17
 ########################################################################################
 # Main
 ########################################################################################
-androidGradleVersion = "8.2.0-alpha11"
+androidGradleVersion = "8.2.0-alpha12"
 kotlinVersion = "1.9.0"
 kspVersion = "1.9.0-1.0.11" # Should only be updated when Kotlin version is updated https://github.com/google/ksp/releases
 
