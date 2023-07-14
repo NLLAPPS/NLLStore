@@ -149,7 +149,7 @@ class InstallAppFragment : DialogFragment() {
 
                                     val message = when (installState.installResult.cause) {
                                         is PackageInstallFailureCause.Aborted -> getString(R.string.install_error_aborted)
-                                        is PackageInstallFailureCause.Blocked -> getString(R.string.install_error_blocked)
+                                        is PackageInstallFailureCause.Blocked -> installState.installResult.cause.message ?: getString(R.string.install_error_blocked)
                                         is PackageInstallFailureCause.Conflict -> getString(R.string.install_error_conflict)
                                         is PackageInstallFailureCause.Generic -> installState.installResult.cause.message ?: getString(R.string.unknown_error)
                                         is PackageInstallFailureCause.Incompatible -> getString(R.string.install_error_incompatible)

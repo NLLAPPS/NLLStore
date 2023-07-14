@@ -4,9 +4,7 @@ import android.content.pm.PackageInstaller
 
 sealed class PackageInstallResult {
 
-    object Success : PackageInstallResult() {
-        override fun toString(): String = "INSTALL_SUCCESS"
-    }
+    data object Success : PackageInstallResult()
 
     /**
      * Install failed.

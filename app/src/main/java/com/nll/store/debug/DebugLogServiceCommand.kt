@@ -2,15 +2,7 @@ package com.nll.store.debug
 
 sealed class DebugLogServiceCommand {
 
-    object Stop : DebugLogServiceCommand()
-    object Save : DebugLogServiceCommand()
-    object Clear : DebugLogServiceCommand()
-
-    override fun toString(): String {
-        return when (this) {
-            is Stop -> "Stop"
-            is Save -> "Save"
-            is Clear -> "Clear"
-        }
-    }
+    data object Stop : DebugLogServiceCommand()
+    data object Save : DebugLogServiceCommand()
+    data object Clear : DebugLogServiceCommand()
 }

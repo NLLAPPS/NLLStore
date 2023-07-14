@@ -19,7 +19,7 @@ sealed class InstallationState {
             sealed class Message {
                 data class GenericError(val message: String) : Message()
                 data class ServerError(val responseCode: Int) : Message()
-                object MalformedFile : Message()
+                data object MalformedFile : Message()
             }
         }
     }
@@ -31,7 +31,7 @@ sealed class InstallationState {
             val isIndeterminate: Boolean = false
         )
 
-        object Started : Install()
+        data object Started : Install()
         data class Progress(val progress: ProgressData) : Install()
         data class Completed(val installResult: PackageInstallResult) : Install()
 

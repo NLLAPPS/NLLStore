@@ -49,4 +49,5 @@
     <string name="update_found">New updates found</string>
     <string name="unable_to_open_file">Unable to open this file. Please try again</string>
     <string name="install_success">Installation completed</string>
+    <string name="install_blocked_by_admin">Install blocked by device admin</string>
 </resources>

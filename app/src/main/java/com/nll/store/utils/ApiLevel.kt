@@ -27,4 +27,10 @@ object ApiLevel {
      */
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.TIRAMISU)
     fun isTPlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+    /**
+     * Api Level 34+, Android 14
+     */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    fun isUpsideDownCakePlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 }
