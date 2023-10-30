@@ -13,6 +13,9 @@ java {
 
 android {
 
+    buildFeatures {
+        buildConfig true
+    }
 
 
     compileSdk(libs.versions.compileSdkVersion.get().toInteger())
