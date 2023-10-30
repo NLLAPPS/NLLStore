@@ -316,7 +316,7 @@ class AppListActivity : AppCompatActivity() {
                     }
                     if (networkStateFlow.isDeviceOnline()) {
                         if (CLog.isDebug()) {
-                            CLog.log(logTag, "observeNetworkState() -> Device is online. Call viewModel.loadAppList()")
+                            CLog.log(logTag, "observeNetworkState() -> Device is online. Call storeApiManager.loadAppList()")
                         }
                         storeApiManager.loadAppList()
                     } else {

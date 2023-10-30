@@ -64,6 +64,8 @@ class DebugLogService : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+
         CLog.enableDebug(this)
         val debugLogIntent = Intent(this, DebugLogActivity::class.java)
         debugLogIntent.action = "android.intent.action.MAIN"
@@ -73,7 +75,13 @@ class DebugLogService : LifecycleService() {
         val notification = DebugNotification.getDebugEnabledNotification(this, pi).build()
         startForeground(R.string.debug_log, notification)
         sendServiceMessage(DebugLogServiceMessage.Started(logStorage))
-        return super.onStartCommand(intent, flags, startId)
+
+        /**
+         * Android 14 seems to cause issues with START_STICKY
+         * java.lang.RuntimeException: Unable to start service com.nll.store.debug.DebugLogService@4ddf6c8 with null: android.app.ForegroundServiceStartNotAllowedException: Service.startForeground() not allowed due to mAllowStartForeground false: service com.nll.store/.debug.DebugLogService
+         *
+         */
+        return START_NOT_STICKY
     }
 
 
