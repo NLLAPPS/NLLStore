@@ -47,7 +47,7 @@ class InstallAppFragment : DialogFragment() {
         binding = FragmentAppInstallerBinding.inflate(requireActivity().layoutInflater)
 
         binding.toolbar.setNavigationOnClickListener {
-            dismiss()
+            dismissAllowingStateLoss()
         }
 
         observerInstallState()
