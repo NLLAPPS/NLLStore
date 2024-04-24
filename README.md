@@ -18,6 +18,7 @@ Improvements to “Enhanced Confirmation Mode” will prevent enabling Accessibi
 **Originial intro**
 &nbsp;
 
+
 Google seems to be committed to stop call recording. They have restricted Accessibility Service usage on Google Play Store and placed it behind an install time permission called "android.permission.ACCESS\_RESTRICTED\_SETTINGS" for sideloaded apps on Android 13.
 &nbsp;
 
