@@ -6,11 +6,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -78,9 +81,16 @@ class AppListActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityAppListBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() + WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            //WindowInsetsCompat.CONSUMED
+            insets
+        }
 
         storeApiManager = StoreApiManager.getInstance(this)
 
@@ -301,16 +311,13 @@ class AppListActivity : AppCompatActivity() {
     }
 
     private fun observeNetworkState() {
-        if (CLog.isDebug()) {
-            CLog.log(logTag, "observeNetworkState()")
-        }
         /**
          * Lifecycle.State.STARTED is important we don't want infinite loop since showing network dialog changes the resume state.
          * CREATED is not applicable as we might re-load when app becomes visible
          */
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                InternetStateProvider.networkStateFlow().collect { networkStateFlow ->
+                InternetStateProvider.networkStateFlowDelayed().collect { networkStateFlow ->
                     if (CLog.isDebug()) {
                         CLog.log(logTag, "observeNetworkState() -> $networkStateFlow")
                     }

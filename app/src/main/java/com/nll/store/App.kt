@@ -50,7 +50,7 @@ class App : Application(), ImageLoaderFactory {
         }
         INSTANCE = this
         initACRA()
-        InternetStateProvider.start(this)
+        InternetStateProvider.start(this, false)
         PeriodicUpdateCheckWorker.enqueueUpdateCheck(this)
     }
 

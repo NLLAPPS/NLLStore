@@ -6,6 +6,16 @@ import androidx.annotation.ChecksSdkIntAtLeast
 object ApiLevel {
 
     /**
+     * Api Level 28+, Android 9
+     */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.P)
+    fun isPiePlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+    /**
+     * Api Level 29+, Android 10
+     */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.Q)
+    fun isQPlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    /**
      * Api Level 30+, Android 11
      */
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.R)
