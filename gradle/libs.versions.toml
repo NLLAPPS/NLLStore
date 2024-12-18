@@ -2,23 +2,23 @@
 ########################################################################################
 # App
 ########################################################################################
-appVersionName = "5"
-appVersionCode = "5"
+appVersionName = "7"
+appVersionCode = "7"
 
 ########################################################################################
 # Build
 ########################################################################################
 compileSdkVersion = "35"
-minSdkVersion = "24"
+minSdkVersion = "29"
 targetSdkVersion = "35"
 javaVersion = "17" # JavaVersion.VERSION_17
 
 ########################################################################################
 # Main
 ########################################################################################
-androidGradleVersion = "8.9.0-alpha02"
-kotlinVersion = "2.0.20"
-kspVersion = "2.0.20-1.0.24"  # Should only be updated when Kotlin version is updated https://github.com/google/ksp/releases
+androidGradleVersion = "8.9.0-alpha06"
+kotlinVersion = "2.1.0"
+kspVersion = "2.1.0-1.0.29"  # Should only be updated when Kotlin version is updated https://github.com/google/ksp/releases
 
 
 ########################################################################################

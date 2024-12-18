@@ -26,7 +26,6 @@ import com.nll.store.api.StoreApiManager
 import com.nll.store.connectivity.InternetStateProvider
 import com.nll.store.databinding.ActivityAppListBinding
 import com.nll.store.debug.DebugLogActivity
-import com.nll.store.debug.DebugLogService
 import com.nll.store.installer.AppInstallManager
 import com.nll.store.installer.InstallationState
 import com.nll.store.installer.PackageInstallFailureCause
@@ -63,8 +62,8 @@ class AppListActivity : AppCompatActivity() {
 
 
     private val postNotificationPermission = activityResultRegistry.register("notification", ActivityResultContracts.RequestPermission()) { hasNotificationPermission ->
-        if (hasNotificationPermission) {
-            DebugLogService.startLogging(this)
+        if (CLog.isDebug()) {
+            CLog.log(logTag, "postNotificationPermission() -> hasNotificationPermission: $hasNotificationPermission")
         }
     }
 
