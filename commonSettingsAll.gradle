@@ -5,12 +5,6 @@ apply plugin: libs.plugins.kotlin.parcelize.get().pluginId
 def libsJavaVersion = libs.versions.javaVersion.get().toString()
 def javaVersionEnum = JavaVersion.toVersion(libsJavaVersion)
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(javaVersionEnum.toString().toInteger()))
-    }
-}
-
 android {
 
     buildFeatures {
