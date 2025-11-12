@@ -20,12 +20,6 @@ android {
         targetCompatibility javaVersionEnum
     }
 
-    kotlinOptions {
-        jvmTarget = javaVersionEnum.toString()
-
-    }
-
-
     defaultConfig {
         minSdk(libs.versions.minSdkVersion.get().toInteger())
         targetSdk(libs.versions.targetSdkVersion.get().toInteger())
@@ -33,7 +27,7 @@ android {
         versionCode(libs.versions.appVersionCode.get().toInteger())
         vectorDrawables.useSupportLibrary = true
         proguardFiles(
-                getDefaultProguardFile('proguard-android.txt'),
+                getDefaultProguardFile('proguard-android-optimize.txt'),
                 'proguard-rules.pro'
         )
         buildConfigField(

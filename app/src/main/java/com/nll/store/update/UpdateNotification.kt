@@ -10,7 +10,7 @@ import com.nll.store.ui.AppListActivity
 import com.nll.store.utils.extGetThemeAttrColor
 import io.karn.notify.Notify
 import io.karn.notify.entities.Payload
-
+import androidx.appcompat.R as AppCompatResources
 object UpdateNotification {
     private fun alertPayload(context: Context) = Payload.Alerts(
         channelKey = "update-notification",
@@ -23,7 +23,7 @@ object UpdateNotification {
     )
 
     fun postUpdateNotification(context: Context) {
-        val notificationColor = ContextThemeWrapper(context.applicationContext, R.style.AppTheme).extGetThemeAttrColor(com.google.android.material.R.attr.colorPrimary)
+        val notificationColor = ContextThemeWrapper(context.applicationContext, R.style.AppTheme).extGetThemeAttrColor(AppCompatResources.attr.colorPrimary)
         val startIntent = Intent(context, AppListActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
