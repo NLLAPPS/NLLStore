@@ -1,4 +1,3 @@
-apply plugin: libs.plugins.kotlin.android.get().pluginId
 apply plugin: libs.plugins.kotlin.ksp.get().pluginId
 apply plugin: libs.plugins.kotlin.parcelize.get().pluginId
 

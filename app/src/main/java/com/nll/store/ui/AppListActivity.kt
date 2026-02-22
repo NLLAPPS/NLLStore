@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.nll.store.R
 import com.nll.store.activityresult.InstallPermissionContract
 import com.nll.store.api.StoreApiManager
-import com.nll.store.connectivity.InternetStateProvider
+import com.nll.store.connectivity.NetworkStateController
 import com.nll.store.databinding.ActivityAppListBinding
 import com.nll.store.debug.DebugLogActivity
 import com.nll.store.installer.AppInstallManager
@@ -37,6 +37,7 @@ import com.nll.store.model.LocalAppData
 import com.nll.store.model.StoreAppData
 import com.nll.store.model.StoreConnectionState
 import com.nll.store.utils.ApiLevel
+import com.nll.store.utils.extRepeatOnLifecycleCollectLatest
 import com.nll.store.utils.extTryStartActivity
 import kotlinx.coroutines.launch
 
@@ -310,26 +311,17 @@ class AppListActivity : AppCompatActivity() {
     }
 
     private fun observeNetworkState() {
-        /**
-         * Lifecycle.State.STARTED is important we don't want infinite loop since showing network dialog changes the resume state.
-         * CREATED is not applicable as we might re-load when app becomes visible
-         */
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                InternetStateProvider.networkStateFlowDelayed().collect { networkStateFlow ->
-                    if (CLog.isDebug()) {
-                        CLog.log(logTag, "observeNetworkState() -> $networkStateFlow")
-                    }
-                    if (networkStateFlow.isDeviceOnline()) {
-                        if (CLog.isDebug()) {
-                            CLog.log(logTag, "observeNetworkState() -> Device is online. Call storeApiManager.loadAppList()")
-                        }
-                        storeApiManager.loadAppList()
-                    } else {
-                        askDeviceToBeMadeOnline()
-                    }
-
+        extRepeatOnLifecycleCollectLatest(NetworkStateController.networkStateFlow(this)) { networkStateFlow ->
+            if (CLog.isDebug()) {
+                CLog.log(logTag, "observeNetworkState() -> $networkStateFlow")
+            }
+            if (networkStateFlow.isDeviceOnline) {
+                if (CLog.isDebug()) {
+                    CLog.log(logTag, "observeNetworkState() -> Device is online. Call storeApiManager.loadAppList()")
                 }
+                storeApiManager.loadAppList()
+            } else {
+                askDeviceToBeMadeOnline()
             }
         }
     }
@@ -353,7 +345,7 @@ class AppListActivity : AppCompatActivity() {
             CLog.log(logTag, "askDeviceToBeMadeOnline()")
         }
         Toast.makeText(this, R.string.internet_conn_required, Toast.LENGTH_SHORT).show()
-        InternetStateProvider.openQuickInterNetConnectivityMenuIfYouCan(this)
+        NetworkStateController.openQuickInterNetConnectivityMenuIfYouCan(this)
     }
 
     private fun hasNotificationPermission() = if (ApiLevel.isTPlus()) {

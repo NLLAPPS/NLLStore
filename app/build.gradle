@@ -1,6 +1,3 @@
-plugins {
-    alias(libs.plugins.kotlin.android)
-}
 apply plugin: libs.plugins.android.application.get().pluginId
 apply from: "$rootProject.projectDir/commonSettingsAll.gradle"
 apply plugin: libs.plugins.kotlin.serialization.get().pluginId
@@ -14,23 +11,6 @@ android {
         ksp {
             arg("room.schemaLocation", "$rootDir/schemas")
             arg("room.incremental", "true")
-        }
-    }
-
-    applicationVariants.configureEach { variant ->
-        variant.outputs.configureEach { output ->
-            output.outputFileName = "nll-store.apk"
-        }
-
-
-        if (!buildType.debuggable) {
-            assembleProvider.get().doLast {
-                mappingFileProvider.get().files.forEach { proguardFile ->
-                    def newFile = new File("${rootDir}/proguard-mappings/${versionCode}.txt")
-                    project.logger.lifecycle("Project app applicationVariants proguardFile from ${proguardFile} to ${newFile.absolutePath}")
-                    proguardFile.renameTo(newFile)
-                }
-            }
         }
     }
 }

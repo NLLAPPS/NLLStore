@@ -8,7 +8,7 @@ import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.util.DebugLogger
-import com.nll.store.connectivity.InternetStateProvider
+import com.nll.store.connectivity.NetworkStateController
 import com.nll.store.log.CLog
 import com.nll.store.update.PeriodicUpdateCheckWorker
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +50,7 @@ class App : Application(), ImageLoaderFactory {
         }
         INSTANCE = this
         initACRA()
-        InternetStateProvider.start(this, false)
+        NetworkStateController.startObserving(this)
         PeriodicUpdateCheckWorker.enqueueUpdateCheck(this)
     }
 
