@@ -56,11 +56,11 @@ internal class NetworkCallbackFlowObserver(private val context: Context, private
         return result
     }
 
-    fun startObserving() {
+    fun startObserving(addDelay: Boolean) {
         if (CLog.isDebug()) {
             CLog.log(logTag, "startObserving()")
         }
-        restart(true)
+        restart(addDelay)
     }
 
     /*

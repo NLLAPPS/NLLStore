@@ -34,7 +34,7 @@ object NetworkStateController {
         }
     }
 
-    fun startObserving(context: Context) = getOrCreateInstance(context).startObserving()
+    fun startObserving(context: Context, addDelay: Boolean) = getOrCreateInstance(context).startObserving(addDelay)
     fun ensureCallbackIsRegistered(context: Context) = getOrCreateInstance(context).ensureCallbackIsRegistered()
     fun isConnectedViaWifi(context: Context) = getOrCreateInstance(context).isConnectedViaWifi()
     fun isDeviceOnline() = networkStateProvider?.isDeviceOnline() == true

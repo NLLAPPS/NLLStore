@@ -29,7 +29,7 @@ class StoreApiManager private constructor(private val applicationContext: Contex
     private val nllPackages = "com.nll."
     private val nllStoreApi = NLLStoreApi()
     private val _appsList = MutableStateFlow(listOf<AppData>())
-    private val _storeConnectionState = MutableStateFlow<StoreConnectionState>(StoreConnectionState.Connected)
+    private val _storeConnectionState = MutableStateFlow<StoreConnectionState>(StoreConnectionState.Connecting)
     private var lastStoreAppListLoadTime = 0L
     private var storeAppList: List<StoreAppData> = listOf()
 
