@@ -16,9 +16,9 @@ javaVersion = "21" # JavaVersion.VERSION_21
 ########################################################################################
 # Main
 ########################################################################################
-androidGradleVersion = "9.2.0-alpha02"
+androidGradleVersion = "9.2.0-alpha03"
 kotlinVersion = "2.3.10"
-kspVersion = "2.3.4"  # Should only be updated when Kotlin version is updated https://github.com/google/ksp/releases
+kspVersion = "2.3.6"  # Should only be updated when Kotlin version is updated https://github.com/google/ksp/releases
 
 
 ########################################################################################
@@ -45,7 +45,7 @@ okHttpVersion = "5.3.2" # https://square.github.io/okhttp/
 okioVersion ="3.16.4"
 kotlinXserializationJsonVersion = "1.10.0" # https://github.com/Kotlin/kotlinx.serialization
 retrofitVersion ="3.0.0"
-ktorVersion = "3.4.0" # https://ktor.io/
+ktorVersion = "3.4.1" # https://ktor.io/
 
 
 [libraries]
