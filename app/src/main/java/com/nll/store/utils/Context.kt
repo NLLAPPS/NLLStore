@@ -38,3 +38,4 @@ fun Context.extGetThemeAttrColor(@AttrRes colorAttr: Int): Int {
         array.recycle()
     }
 }
+

@@ -35,8 +35,8 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/startButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
+            
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/start"
             app:layout_constraintEnd_toStartOf="@+id/stopButton"
@@ -45,8 +45,8 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/stopButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
+            
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/stop"
             app:layout_constraintEnd_toEndOf="parent"
@@ -56,8 +56,8 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/sendButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
+            
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/send"
             app:layout_constraintEnd_toStartOf="@+id/clearButton"
@@ -66,8 +66,8 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/clearButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
+            
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/clear"
             app:layout_constraintEnd_toEndOf="parent"

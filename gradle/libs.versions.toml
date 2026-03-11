@@ -2,8 +2,8 @@
 ########################################################################################
 # App
 ########################################################################################
-appVersionName = "12"
-appVersionCode = "12"
+appVersionName = "14"
+appVersionCode = "14"
 
 ########################################################################################
 # Build
@@ -40,7 +40,7 @@ banesVersionsVersion = "0.53.0" # https://github.com/ben-manes/gradle-versions-p
 coilVersion = "2.7.0" # https://github.com/coil-kt/coil
 coroutinesVersion = "1.10.2" # https://github.com/Kotlin/kotlinx.coroutines
 kotPrefVersion = "2.13.2" # https://github.com/chibatching/Kotpref
-materialComponentsVersion = "1.13.0" # https://github.com/material-components/material-components-android/releases
+materialComponentsVersion = "1.14.0-alpha09" # https://github.com/material-components/material-components-android/releases
 okHttpVersion = "5.3.2" # https://square.github.io/okhttp/
 okioVersion ="3.16.4"
 kotlinXserializationJsonVersion = "1.10.0" # https://github.com/Kotlin/kotlinx.serialization
