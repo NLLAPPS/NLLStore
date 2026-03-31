@@ -16,8 +16,8 @@ javaVersion = "21" # JavaVersion.VERSION_21
 ########################################################################################
 # Main
 ########################################################################################
-androidGradleVersion = "9.2.0-alpha03"
-kotlinVersion = "2.3.10"
+androidGradleVersion = "9.2.0-alpha06"
+kotlinVersion = "2.3.20"
 kspVersion = "2.3.6"  # Should only be updated when Kotlin version is updated https://github.com/google/ksp/releases
 
 
@@ -33,16 +33,16 @@ androidXfragmentVersion = "1.8.9" # https://developer.android.com/jetpack/androi
 androidXlifeCycleVersion = "2.10.0" # https://developer.android.com/jetpack/androidx/releases/lifecycle
 androidXrecyclerViewVersion = "1.4.0" # https://developer.android.com/jetpack/androidx/releases/recyclerview
 androidXstartupVersion = "1.2.0" # https://developer.android.com/jetpack/androidx/releases/startup
-androidXCoreVersion = "1.17.0" # https://developer.android.com/jetpack/androidx/releases/core
-androidXworkManagerVersion = "2.11.1" # https://developer.android.com/jetpack/androidx/releases/work
+androidXCoreVersion = "1.18.0" # https://developer.android.com/jetpack/androidx/releases/core
+androidXworkManagerVersion = "2.11.2" # https://developer.android.com/jetpack/androidx/releases/work
 androidXannotationVersion = "1.9.1"
 banesVersionsVersion = "0.53.0" # https://github.com/ben-manes/gradle-versions-plugin
 coilVersion = "2.7.0" # https://github.com/coil-kt/coil
 coroutinesVersion = "1.10.2" # https://github.com/Kotlin/kotlinx.coroutines
 kotPrefVersion = "2.13.2" # https://github.com/chibatching/Kotpref
-materialComponentsVersion = "1.14.0-alpha09" # https://github.com/material-components/material-components-android/releases
+materialComponentsVersion = "1.14.0-alpha10" # https://github.com/material-components/material-components-android/releases
 okHttpVersion = "5.3.2" # https://square.github.io/okhttp/
-okioVersion ="3.16.4"
+okioVersion ="3.17.0"
 kotlinXserializationJsonVersion = "1.10.0" # https://github.com/Kotlin/kotlinx.serialization
 retrofitVersion ="3.0.0"
 ktorVersion = "3.4.1" # https://ktor.io/
